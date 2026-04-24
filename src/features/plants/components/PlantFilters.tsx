@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useDebounce } from '../../../hooks/useDebounce';
 import type { CareLevel } from '../types';
 
 const CATEGORIES = ['Indoor', 'Outdoor', 'Tropical', 'Succulent', 'Flowering', 'Foliage'];
@@ -29,23 +30,16 @@ export default function PlantFilters() {
     setParams(next);
   };
 
-  // isFirstRender ref skips the debounce effect on mount so the initial URL param
-  // doesn't immediately overwrite itself with the empty local state.
+  const debouncedSearch = useDebounce(search, 400);
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    // 400ms debounce — avoids an API call on every keystroke while still feeling responsive.
-    const timer = setTimeout(() => {
-      updateParam('search', search.trim());
-    }, 400);
-    return () => clearTimeout(timer);
-  // updateParam is recreated each render (captures current params via closure) so it's
-  // intentionally excluded from the dep array to avoid resetting the debounce timer mid-type.
+    updateParam('search', debouncedSearch.trim());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [debouncedSearch]);
 
   // Price inputs commit on blur or Enter — not on every keystroke — to avoid firing a query
   // mid-number (e.g., typing "100" would trigger queries for "1", "10", "100").
