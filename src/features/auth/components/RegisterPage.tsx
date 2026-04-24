@@ -11,6 +11,8 @@ interface FormErrors {
   password?: string;
 }
 
+// Client-side validation gives fast field-level feedback without a server round-trip.
+// Rules mirror the backend's Joi schema (name ≥ 2 chars, valid email, password ≥ 8 chars).
 function validate(name: string, email: string, password: string): FormErrors {
   const errors: FormErrors = {};
   if (!name) {
@@ -55,6 +57,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // The register endpoint returns tokens + user just like login,
+      // so the user is signed in immediately after account creation.
       const res = await registerApi({ name, email, password });
       dispatch(setCredentials(res.data));
       navigate('/');
@@ -78,8 +82,8 @@ export default function RegisterPage() {
           <p className="text-sm text-gray-500 mt-1">Start renting plants today</p>
         </div>
 
+        {/* noValidate disables browser-native validation UI so our custom errors show instead */}
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
             <input
@@ -92,7 +96,6 @@ export default function RegisterPage() {
             {fieldErrors.name && <p className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>}
           </div>
 
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -105,7 +108,6 @@ export default function RegisterPage() {
             {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <PasswordInput

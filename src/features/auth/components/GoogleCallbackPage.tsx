@@ -5,13 +5,20 @@ import { setCredentials, setError } from '../authSlice';
 import type { AuthUser } from '../types';
 
 // The backend redirects to /auth/callback?accessToken=...&refreshToken=...
-// We decode the JWT payload to extract the user info stored in the token.
+// after a successful Google OAuth flow. This page reads those params, rebuilds the
+// user session, and navigates away immediately.
+
+// The backend stores { id, role } in the JWT payload. We decode it client-side
+// so we can set Redux state without a second API call (no token verification needed
+// here — axiosInstance interceptors handle that on actual API calls).
 function parseJwtPayload(token: string): { id: string; role: string } | null {
   try {
+    // JWT structure: header.payload.signature — all base64url-encoded.
+    // We only need the payload (index 1). Replace - and _ to convert from base64url to base64.
     const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
     return JSON.parse(atob(base64)) as { id: string; role: string };
   } catch {
-    return null;
+    return null; // malformed token
   }
 }
 
@@ -19,6 +26,7 @@ export default function GoogleCallbackPage() {
   const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  // processed ref prevents the effect from running twice in React StrictMode (double-invoke).
   const processed = useRef(false);
 
   useEffect(() => {
@@ -42,19 +50,23 @@ export default function GoogleCallbackPage() {
       return;
     }
 
-    // Build a minimal user object from the JWT payload.
-    // The backend stores { id, role } in the access token.
+    // Build a minimal AuthUser from the JWT payload.
+    // name and email are blank here because the JWT doesn't contain them.
+    // They will be fetched from the profile endpoint when the user visits a page that needs them.
     const user: AuthUser = {
       _id: payload.id,
-      name: '',      // not available in JWT — will be populated when profile is fetched
+      name: '',
       email: '',
       role: payload.role as AuthUser['role'],
     };
 
     dispatch(setCredentials({ user, accessToken, refreshToken }));
+    // replace: true removes the callback URL from the history stack so the user
+    // can't navigate "back" to this page after being redirected.
     navigate('/', { replace: true });
   }, [dispatch, navigate, searchParams]);
 
+  // Spinner shown while the redirect/dispatch is in progress.
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">

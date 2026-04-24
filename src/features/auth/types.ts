@@ -1,3 +1,5 @@
+// UserRole mirrors the backend's UserRole union in user.model.ts.
+// Keeping a frontend copy prevents the UI from needing to hardcode strings for role checks.
 export type UserRole =
   | 'user'
   | 'super_admin'
@@ -6,6 +8,8 @@ export type UserRole =
   | 'delivery_admin'
   | 'user_admin';
 
+// Minimal user shape stored in Redux and localStorage after login/register.
+// Sensitive fields (password, tokens) are never stored here.
 export interface AuthUser {
   _id: string;
   name: string;
@@ -13,7 +17,7 @@ export interface AuthUser {
   role: UserRole;
 }
 
-// ── Request bodies ──────────────────────────────────────────────
+// Request payload types — typed to match the exact JSON bodies the backend expects.
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -30,11 +34,11 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
-  token: string;
+  token: string;       // raw token from the reset email URL query param
   newPassword: string;
 }
 
-// ── Response shapes ─────────────────────────────────────────────
+// Response type for endpoints that issue tokens (login, register, Google OAuth).
 export interface AuthResponse {
   success: true;
   data: {
@@ -44,11 +48,13 @@ export interface AuthResponse {
   };
 }
 
+// Response type for endpoints that only confirm an action (forgot password, logout).
 export interface MessageResponse {
   success: true;
   message: string;
 }
 
+// Response type for the /api/auth/refresh-token endpoint — only a new accessToken is returned.
 export interface RefreshTokenResponse {
   success: true;
   data: {
@@ -56,7 +62,8 @@ export interface RefreshTokenResponse {
   };
 }
 
-// ── Redux state ─────────────────────────────────────────────────
+// Redux slice state shape. loading and error are kept here so auth forms can
+// use them via useAppSelector instead of local state.
 export interface AuthState {
   user: AuthUser | null;
   accessToken: string | null;

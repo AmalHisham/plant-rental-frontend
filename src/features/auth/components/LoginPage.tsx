@@ -10,8 +10,13 @@ interface FormErrors {
   password?: string;
 }
 
+// GOOGLE_AUTH_URL points to the backend's OAuth redirect entry point.
+// A full page navigation (href, not fetch) is required because Google OAuth
+// uses a browser redirect flow — it cannot be triggered by an XHR request.
 const GOOGLE_AUTH_URL = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000'}/api/auth/google`;
 
+// Client-side validation mirrors the backend's minimum rules to give
+// instant feedback before a round-trip is made to the API.
 function validate(email: string, password: string): FormErrors {
   const errors: FormErrors = {};
   if (!email) {
@@ -34,6 +39,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
+  // apiError is kept separate from fieldErrors so it appears as a banner,
+  // not inline next to a specific field.
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -51,6 +58,7 @@ export default function LoginPage() {
 
     try {
       const res = await loginApi({ email, password });
+      // setCredentials writes tokens + user to both Redux state and localStorage.
       dispatch(setCredentials(res.data));
       navigate('/');
     } catch (err: unknown) {
@@ -73,6 +81,7 @@ export default function LoginPage() {
           <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
         </div>
 
+        {/* Google sign-in — full page redirect to start the OAuth flow */}
         <a
           href={GOOGLE_AUTH_URL}
           className="flex items-center justify-center gap-3 w-full border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition mb-6"
@@ -92,6 +101,7 @@ export default function LoginPage() {
           <hr className="flex-1 border-gray-200" />
         </div>
 
+        {/* noValidate disables native browser validation so we can show our own error UI */}
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>

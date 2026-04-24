@@ -5,6 +5,8 @@ import PasswordInput from '../../../components/PasswordInput';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
+  // The raw reset token is passed as a query param by the link in the reset email.
+  // The backend will SHA-256 hash it and compare against the stored digest.
   const token = searchParams.get('token') ?? '';
   const navigate = useNavigate();
 
@@ -15,6 +17,8 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Guard: if the user lands here without a token (e.g. direct navigation),
+  // show a clear error with a link to request a new reset email.
   if (!token) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -32,6 +36,7 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setApiError('');
 
+    // Validate both password fields before sending the request.
     const errors: { newPassword?: string; confirmPassword?: string } = {};
     if (!newPassword) {
       errors.newPassword = 'Password is required';
@@ -54,6 +59,7 @@ export default function ResetPasswordPage() {
     try {
       await resetPasswordApi({ token, newPassword });
       setSuccess(true);
+      // Redirect to login after a brief pause so the user sees the success message.
       setTimeout(() => navigate('/login'), 2500);
     } catch (err: unknown) {
       const msg =
@@ -65,6 +71,7 @@ export default function ResetPasswordPage() {
     }
   };
 
+  // Success screen — replaces the form to prevent a second submission.
   if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">

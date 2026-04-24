@@ -7,14 +7,22 @@ import ForgotPasswordPage from './features/auth/components/ForgotPasswordPage';
 import ResetPasswordPage from './features/auth/components/ResetPasswordPage';
 import GoogleCallbackPage from './features/auth/components/GoogleCallbackPage';
 
-// Route guards
+// Home
+import LandingPage from './features/home/components/LandingPage';
+
+// Plant pages
+import HomePage from './features/plants/components/HomePage';
+import PlantDetailsPage from './features/plants/components/PlantDetailsPage';
+
+// Wishlist / Cart
+import WishlistPage from './features/wishlist/components/WishlistPage';
+import CartPage from './features/cart/components/CartPage';
+
+// Route guards — render an Outlet for authorised users, redirect otherwise
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
-// ── Placeholder pages (to be replaced as modules are built) ──
-const HomePage = () => <div className="p-8 text-xl">Home — Browse Plants</div>;
-const PlantDetailsPage = () => <div className="p-8 text-xl">Plant Details</div>;
-const CartPage = () => <div className="p-8 text-xl">Cart</div>;
+// Stub pages for features not yet implemented — inline so they don't pollute the file tree
 const CheckoutPage = () => <div className="p-8 text-xl">Checkout</div>;
 const OrdersPage = () => <div className="p-8 text-xl">My Orders</div>;
 const OrderDetailsPage = () => <div className="p-8 text-xl">Order Details</div>;
@@ -29,19 +37,25 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<HomePage />} />
+        {/* ── Public routes ──────────────────────────────────────────────────── */}
+        {/* These pages are accessible without a login (marketing, browsing, auth flows). */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/plants" element={<HomePage />} />
         <Route path="/plants/:id" element={<PlantDetailsPage />} />
 
-        {/* Auth routes */}
+        {/* ── Auth routes ─────────────────────────────────────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* /auth/callback receives tokens as query params after Google OAuth redirect */}
         <Route path="/auth/callback" element={<GoogleCallbackPage />} />
 
-        {/* Protected user routes */}
+        {/* ── Protected user routes ────────────────────────────────────────────── */}
+        {/* ProtectedRoute renders an Outlet when the user is logged in,
+            or redirects to /login if no access token is found. */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrdersPage />} />
@@ -50,7 +64,9 @@ function App() {
           <Route path="/ai/chat" element={<AIChatbotPage />} />
         </Route>
 
-        {/* Admin-only routes */}
+        {/* ── Admin-only routes ───────────────────────────────────────────────── */}
+        {/* AdminRoute renders an Outlet only for users whose role is not 'user',
+            or redirects to / for regular users who navigate here directly. */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/plants" element={<AdminPlantsPage />} />
@@ -58,7 +74,7 @@ function App() {
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Route>
 
-        {/* Fallback */}
+        {/* Catch-all: unknown paths go to the landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

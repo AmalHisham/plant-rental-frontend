@@ -6,6 +6,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [apiError, setApiError] = useState('');
+  // success state switches the page to a confirmation view after the request succeeds.
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -26,6 +27,8 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       await forgotPasswordApi({ email });
+      // The backend always responds with a generic success message regardless of whether
+      // the email exists. We mirror that here — no user enumeration on the frontend either.
       setSuccess(true);
     } catch (err: unknown) {
       const msg =
@@ -37,6 +40,7 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  // Post-submit confirmation screen — replaces the form to prevent a second submission.
   if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
