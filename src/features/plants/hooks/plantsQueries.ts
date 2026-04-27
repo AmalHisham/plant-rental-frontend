@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getAllPlants, getPlantById } from './plantsApi';
+import { getAllPlants, getPlantById } from '../utils/plantsApi';
 import type { PlantFilters } from '../types';
 
 export const PLANTS_QUERY_KEY = 'plants';

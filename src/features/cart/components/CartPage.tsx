@@ -6,7 +6,7 @@ import {
   useUpdateCartItem,
   useRemoveFromCart,
   useClearCart,
-} from '../utils/cartQueries';
+} from '../hooks/cartQueries';
 import type { CartItem } from '../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

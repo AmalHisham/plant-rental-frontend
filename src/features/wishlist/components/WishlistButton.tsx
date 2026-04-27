@@ -4,7 +4,7 @@ import {
   useWishlistIds,
   useAddToWishlist,
   useRemoveFromWishlist,
-} from '../utils/wishlistQueries';
+} from '../hooks/wishlistQueries';
 
 interface Props {
   plantId: string;

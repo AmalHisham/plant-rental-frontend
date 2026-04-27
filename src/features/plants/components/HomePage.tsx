@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { usePlants } from '../utils/plantsQueries';
+import { usePlants } from '../hooks/plantsQueries';
 import type { CareLevel, PlantFilters } from '../types';
 import PlantCard from './PlantCard';
 import PlantFiltersBar from './PlantFilters';

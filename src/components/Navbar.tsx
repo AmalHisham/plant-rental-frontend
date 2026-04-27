@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logout } from '../features/auth/authSlice';
-import { useWishlist } from '../features/wishlist/utils/wishlistQueries';
-import { useCart } from '../features/cart/utils/cartQueries';
+import { useWishlist } from '../features/wishlist/hooks/wishlistQueries';
+import { useCart } from '../features/cart/hooks/cartQueries';
 import type { UserRole } from '../features/auth/types';
 
 // Set for O(1) admin-role lookup — used both in the desktop and mobile menus.

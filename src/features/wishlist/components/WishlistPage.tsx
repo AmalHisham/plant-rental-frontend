@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useWishlist } from '../utils/wishlistQueries';
+import { useWishlist } from '../hooks/wishlistQueries';
 import PlantCard from '../../plants/components/PlantCard';
 import LoadingSkeleton from '../../plants/components/LoadingSkeleton';
 import type { PlantCardData } from '../../plants/types';

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { usePlants } from '../../plants/utils/plantsQueries';
+import { usePlants } from '../../plants/hooks/plantsQueries';
 import PlantCard from '../../plants/components/PlantCard';
 import LoadingSkeleton from '../../plants/components/LoadingSkeleton';
 

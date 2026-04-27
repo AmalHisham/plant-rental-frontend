@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { usePlant } from '../utils/plantsQueries';
+import { usePlant } from '../hooks/plantsQueries';
 import CareLevelBadge from './CareLevelBadge';
 import type { CareLevel } from '../types';
-import { useWishlistIds, useAddToWishlist, useRemoveFromWishlist } from '../../wishlist/utils/wishlistQueries';
-import { useAddToCart } from '../../cart/utils/cartQueries';
+import { useWishlistIds, useAddToWishlist, useRemoveFromWishlist } from '../../wishlist/hooks/wishlistQueries';
+import { useAddToCart } from '../../cart/hooks/cartQueries';
 import { useAppSelector } from '../../../store';
 import axios from 'axios';
 

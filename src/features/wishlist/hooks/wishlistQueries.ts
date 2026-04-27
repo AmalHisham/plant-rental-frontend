@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppSelector } from '../../../store';
-import { getWishlist, addToWishlist, removeFromWishlist } from './wishlistApi';
+import { getWishlist, addToWishlist, removeFromWishlist } from '../utils/wishlistApi';
 import type { WishlistPlant, WishlistResponse } from '../types';
 
 export const WISHLIST_QUERY_KEY = 'wishlist';
