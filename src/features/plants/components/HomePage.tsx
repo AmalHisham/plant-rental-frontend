@@ -6,6 +6,7 @@ import PlantFiltersBar from './PlantFilters';
 import LoadingSkeleton from './LoadingSkeleton';
 import type { PaginationInfo } from '../types';
 import Navbar from '../../../components/Navbar';
+import BackButton from '../../../components/BackButton';
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ export default function HomePage() {
       {/* Hero banner */}
       <div className="bg-white border-b border-gray-200 px-4 py-8">
         <div className="max-w-7xl mx-auto">
+          <BackButton className="mb-3" />
           <h1 className="text-3xl font-bold text-gray-900">Rent a Plant</h1>
           <p className="text-gray-500 mt-1">
             Beautiful plants delivered to your office, event, or studio

@@ -4,6 +4,7 @@ import { useAppDispatch } from '../../../store';
 import { setCredentials, setError } from '../authSlice';
 import { loginApi } from '../utils/authApi';
 import PasswordInput from '../../../components/PasswordInput';
+import BackButton from '../../../components/BackButton';
 
 interface FormErrors {
   email?: string;
@@ -75,6 +76,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
+        <BackButton className="mb-4" />
         <div className="text-center mb-8">
           <span className="text-4xl">🌿</span>
           <h1 className="mt-2 text-2xl font-semibold text-gray-800">Welcome back</h1>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { forgotPasswordApi } from '../utils/authApi';
+import BackButton from '../../../components/BackButton';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -66,6 +67,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
+        <BackButton className="mb-4" />
         <div className="text-center mb-8">
           <span className="text-4xl">🔑</span>
           <h1 className="mt-2 text-2xl font-semibold text-gray-800">Forgot your password?</h1>

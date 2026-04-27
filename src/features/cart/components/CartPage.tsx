@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import BackButton from '../../../components/BackButton';
 import {
   useCart,
   useUpdateCartItem,
@@ -370,6 +371,7 @@ export default function CartPage() {
         <div className="max-w-5xl mx-auto px-4 py-8">
 
           {/* Header */}
+          <BackButton className="mb-4" />
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>

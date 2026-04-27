@@ -3,6 +3,7 @@ import { useWishlist } from '../hooks/wishlistQueries';
 import PlantCard from '../../plants/components/PlantCard';
 import LoadingSkeleton from '../../plants/components/LoadingSkeleton';
 import type { PlantCardData } from '../../plants/types';
+import BackButton from '../../../components/BackButton';
 
 export default function WishlistPage() {
   const { data, isLoading, isError } = useWishlist();
@@ -13,6 +14,7 @@ export default function WishlistPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-4 py-6">
         <div className="max-w-7xl mx-auto">
+          <BackButton className="mb-3" />
           <h1 className="text-2xl font-bold text-gray-900">My Wishlist</h1>
           {/* Count is only shown after load completes to avoid a jarring "0 plants" flash. */}
           {!isLoading && !isError && (

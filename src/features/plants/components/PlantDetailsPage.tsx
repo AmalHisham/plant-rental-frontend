@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import BackButton from '../../../components/BackButton';
 import { usePlant } from '../hooks/plantsQueries';
 import CareLevelBadge from './CareLevelBadge';
 import type { CareLevel } from '../types';
@@ -465,6 +466,9 @@ export default function PlantDetailsPage() {
           md:pb-8 removes the extra padding on desktop where the sticky bar is hidden. */}
       <div className="min-h-screen bg-gray-50 pb-28 md:pb-8">
         <div className="max-w-5xl mx-auto px-4 py-8">
+
+          {/* ── Back button ── */}
+          <BackButton className="mb-4" />
 
           {/* ── Breadcrumb ── */}
           <nav className="text-sm text-gray-400 mb-6 flex items-center gap-1.5 flex-wrap">
