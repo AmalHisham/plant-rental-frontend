@@ -21,14 +21,16 @@ import CartPage from './features/cart/components/CartPage';
 // Profile
 import ProfilePage from './features/profile/components/ProfilePage';
 
+// Checkout
+import CheckoutPage from './features/checkout/components/CheckoutPage';
+
+// Orders
+import OrdersPage from './features/orders/components/OrdersPage';
+import OrderDetailsPage from './features/orders/components/OrderDetailsPage';
+
 // Route guards — render an Outlet for authorised users, redirect otherwise
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
-
-// Stub pages for features not yet implemented — inline so they don't pollute the file tree
-const CheckoutPage = () => <div className="p-8 text-xl">Checkout</div>;
-const OrdersPage = () => <div className="p-8 text-xl">My Orders</div>;
-const OrderDetailsPage = () => <div className="p-8 text-xl">Order Details</div>;
 const AdminDashboardPage = () => <div className="p-8 text-xl">Admin Dashboard</div>;
 const AdminPlantsPage = () => <div className="p-8 text-xl">Admin — Plants</div>;
 const AdminOrdersPage = () => <div className="p-8 text-xl">Admin — Orders</div>;
