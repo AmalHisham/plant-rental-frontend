@@ -18,6 +18,9 @@ import PlantDetailsPage from './features/plants/components/PlantDetailsPage';
 import WishlistPage from './features/wishlist/components/WishlistPage';
 import CartPage from './features/cart/components/CartPage';
 
+// Profile
+import ProfilePage from './features/profile/components/ProfilePage';
+
 // Route guards — render an Outlet for authorised users, redirect otherwise
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -57,6 +60,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />

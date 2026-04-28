@@ -220,6 +220,13 @@ export default function Navbar() {
                       <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                     </div>
                     <Link
+                      to="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      My Profile
+                    </Link>
+                    <Link
                       to="/orders"
                       onClick={() => setProfileOpen(false)}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -339,6 +346,13 @@ export default function Navbar() {
                       {cartCount}
                     </span>
                   )}
+                </Link>
+                <Link
+                  to="/profile"
+                  onClick={closeMenu}
+                  className="text-sm text-gray-700 hover:text-green-700 py-1.5"
+                >
+                  My Profile
                 </Link>
                 <Link
                   to="/orders"

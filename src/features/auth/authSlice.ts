@@ -77,8 +77,17 @@ const authSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
+
+    // updateUser patches fields on auth.user without touching tokens.
+    // Used after a profile update so the navbar immediately reflects the new name/phone.
+    updateUser(state, action: PayloadAction<Partial<AuthUser>>) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('authUser', JSON.stringify(state.user));
+      }
+    },
   },
 });
 
-export const { setCredentials, logout, setLoading, setError } = authSlice.actions;
+export const { setCredentials, logout, setLoading, setError, updateUser } = authSlice.actions;
 export default authSlice.reducer;
