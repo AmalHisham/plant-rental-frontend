@@ -181,23 +181,24 @@ export default function Navbar() {
                   `text-sm font-medium transition-colors ${isActive ? 'text-green-700' : 'text-gray-600 hover:text-green-700'}`
                 }
               >
-                Admin
+                Admin Panel
               </NavLink>
             )}
           </div>
 
           {/* Desktop right: wishlist, cart, user menu */}
           <div className="hidden md:flex items-center gap-1">
-            {/* Wishlist icon is only shown when authenticated — unauthenticated users can't save wishlists */}
-            {isAuthenticated && (
+            {/* Wishlist and cart icons are hidden for admins — they are customer-only features */}
+            {isAuthenticated && !isAdmin && (
               <IconButton to="/wishlist" label="Wishlist" badge={wishlistCount}>
                 <HeartIcon />
               </IconButton>
             )}
-            {/* Cart icon is always shown; badge only appears for logged-in users */}
-            <IconButton to="/cart" label="Cart" badge={isAuthenticated ? cartCount : undefined}>
-              <CartIcon />
-            </IconButton>
+            {!isAdmin && (
+              <IconButton to="/cart" label="Cart" badge={isAuthenticated ? cartCount : undefined}>
+                <CartIcon />
+              </IconButton>
+            )}
 
             {isAuthenticated ? (
               // Profile avatar + dropdown
@@ -219,20 +220,24 @@ export default function Navbar() {
                       <p className="text-xs font-semibold text-gray-800 truncate">{user?.name}</p>
                       <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                     </div>
-                    <Link
-                      to="/profile"
-                      onClick={() => setProfileOpen(false)}
-                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      My Profile
-                    </Link>
-                    <Link
-                      to="/orders"
-                      onClick={() => setProfileOpen(false)}
-                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      My Orders
-                    </Link>
+                    {!isAdmin && (
+                      <>
+                        <Link
+                          to="/profile"
+                          onClick={() => setProfileOpen(false)}
+                          className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          My Profile
+                        </Link>
+                        <Link
+                          to="/orders"
+                          onClick={() => setProfileOpen(false)}
+                          className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          My Orders
+                        </Link>
+                      </>
+                    )}
                     {isAdmin && (
                       <Link
                         to="/admin"
@@ -322,46 +327,48 @@ export default function Navbar() {
                   <p className="text-xs text-gray-400 truncate">{user?.email}</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <Link
-                  to="/wishlist"
-                  onClick={closeMenu}
-                  className="flex items-center justify-between text-sm text-gray-700 hover:text-green-700 py-1.5"
-                >
-                  <span>Wishlist</span>
-                  {wishlistCount > 0 && (
-                    <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Link>
-                <Link
-                  to="/cart"
-                  onClick={closeMenu}
-                  className="flex items-center justify-between text-sm text-gray-700 hover:text-green-700 py-1.5"
-                >
-                  <span>Cart</span>
-                  {cartCount > 0 && (
-                    <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
-                <Link
-                  to="/profile"
-                  onClick={closeMenu}
-                  className="text-sm text-gray-700 hover:text-green-700 py-1.5"
-                >
-                  My Profile
-                </Link>
-                <Link
-                  to="/orders"
-                  onClick={closeMenu}
-                  className="text-sm text-gray-700 hover:text-green-700 py-1.5"
-                >
-                  My Orders
-                </Link>
-              </div>
+              {!isAdmin && (
+                <div className="flex flex-col gap-1">
+                  <Link
+                    to="/wishlist"
+                    onClick={closeMenu}
+                    className="flex items-center justify-between text-sm text-gray-700 hover:text-green-700 py-1.5"
+                  >
+                    <span>Wishlist</span>
+                    {wishlistCount > 0 && (
+                      <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/cart"
+                    onClick={closeMenu}
+                    className="flex items-center justify-between text-sm text-gray-700 hover:text-green-700 py-1.5"
+                  >
+                    <span>Cart</span>
+                    {cartCount > 0 && (
+                      <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/profile"
+                    onClick={closeMenu}
+                    className="text-sm text-gray-700 hover:text-green-700 py-1.5"
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    to="/orders"
+                    onClick={closeMenu}
+                    className="text-sm text-gray-700 hover:text-green-700 py-1.5"
+                  >
+                    My Orders
+                  </Link>
+                </div>
+              )}
               <button
                 onClick={() => { dispatch(logout()); closeMenu(); }}
                 className="text-sm text-red-500 text-left py-1"

@@ -61,7 +61,9 @@ export default function LoginPage() {
       const res = await loginApi({ email, password });
       // setCredentials writes tokens + user to both Redux state and localStorage.
       dispatch(setCredentials(res.data));
-      navigate('/');
+      const role = res.data.user.role;
+      const isAdmin = ['super_admin', 'product_admin', 'order_admin', 'delivery_admin', 'user_admin'].includes(role);
+      navigate(isAdmin ? '/admin' : '/');
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

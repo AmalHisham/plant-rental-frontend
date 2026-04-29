@@ -31,10 +31,13 @@ import OrderDetailsPage from './features/orders/components/OrderDetailsPage';
 // Route guards — render an Outlet for authorised users, redirect otherwise
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
-const AdminDashboardPage = () => <div className="p-8 text-xl">Admin Dashboard</div>;
-const AdminPlantsPage = () => <div className="p-8 text-xl">Admin — Plants</div>;
-const AdminOrdersPage = () => <div className="p-8 text-xl">Admin — Orders</div>;
-const AdminUsersPage = () => <div className="p-8 text-xl">Admin — Users</div>;
+
+// Admin pages
+import AdminDashboardPage from './features/admin/components/AdminDashboardPage';
+import AdminPlantsPage from './features/admin/components/AdminPlantsPage';
+import AdminOrdersPage from './features/admin/components/AdminOrdersPage';
+import AdminUsersPage from './features/admin/components/AdminUsersPage';
+
 const AIPreviewPage = () => <div className="p-8 text-xl">AI Office Preview</div>;
 const AIChatbotPage = () => <div className="p-8 text-xl">AI Chatbot</div>;
 
