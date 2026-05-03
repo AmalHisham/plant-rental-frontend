@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
 import BackButton from '../../../components/BackButton';
+import Toast from '../../../components/Toast';
 import { useCart, CART_QUERY_KEY } from '../../cart/hooks/cartQueries';
 import { useAddresses, useProfile } from '../../profile/hooks/profileQueries';
 import {
@@ -41,28 +42,6 @@ const loadRazorpayScript = (): Promise<boolean> =>
     script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-interface ToastProps {
-  message: string;
-  visible: boolean;
-  type?: 'success' | 'error';
-}
-
-function Toast({ message, visible, type = 'success' }: ToastProps) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl transition-all duration-300 whitespace-nowrap ${
-        type === 'error' ? 'bg-red-600' : 'bg-gray-900'
-      } ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'}`}
-    >
-      {message}
-    </div>
-  );
-}
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -388,11 +367,20 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="text-xs text-gray-500 leading-relaxed space-y-1 mb-4 bg-gray-50 rounded-xl p-4">
-                      <p>• Rental period starts and ends on the dates you selected.</p>
-                      <p>• A refundable deposit is held and returned when plants are picked up undamaged.</p>
-                      <p>• Minor or major damage may result in partial or full deposit forfeiture.</p>
-                      <p>• Cancellations after order placement are subject to our cancellation policy.</p>
+                    <div className="text-xs text-gray-500 leading-relaxed space-y-2 mb-4 bg-gray-50 rounded-xl p-4">
+                      {[
+                        'Rental period starts and ends on the dates you selected.',
+                        'A refundable deposit is held and returned when plants are picked up undamaged.',
+                        'Minor or major damage may result in partial or full deposit forfeiture.',
+                        'Cancellations after order placement are subject to our cancellation policy.',
+                      ].map((line) => (
+                        <div key={line} className="flex items-start gap-2">
+                          <svg className="shrink-0 w-4 h-4 text-green-500 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>{line}</span>
+                        </div>
+                      ))}
                     </div>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
@@ -421,7 +409,7 @@ export default function CheckoutPage() {
                   return (
                     <div key={plant._id} className="flex gap-3">
                       {/* Thumbnail */}
-                      <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-green-50 flex items-center justify-center">
+                      <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-green-50 border border-gray-100 flex items-center justify-center">
                         {plant.images?.[0] ? (
                           <img src={plant.images[0]} alt={plant.name} className="w-full h-full object-cover" />
                         ) : (

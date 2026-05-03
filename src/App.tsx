@@ -32,6 +32,8 @@ import OrderDetailsPage from './features/orders/components/OrderDetailsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
+import ScrollToTopButton from './components/ScrollToTopButton';
+
 // Admin pages
 import AdminDashboardPage from './features/admin/components/AdminDashboardPage';
 import AdminPlantsPage from './features/admin/components/AdminPlantsPage';
@@ -86,6 +88,8 @@ function App() {
         {/* Catch-all: unknown paths go to the landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {/* ScrollToTopButton is outside <Routes> so it persists across all pages */}
+      <ScrollToTopButton />
     </BrowserRouter>
   );
 }

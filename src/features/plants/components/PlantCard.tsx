@@ -21,7 +21,7 @@ export default function PlantCard({ plant }: Props) {
     <div
       onClick={() => navigate(`/plants/${plant._id}`)}
       className="group block rounded-xl border border-gray-200 overflow-hidden bg-white
-        hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+        hover:shadow-lg hover:-translate-y-0.5 hover:border-green-300 transition-all duration-200 cursor-pointer"
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">

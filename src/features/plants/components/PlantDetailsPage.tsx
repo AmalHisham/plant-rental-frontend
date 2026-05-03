@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import BackButton from '../../../components/BackButton';
+import Toast from '../../../components/Toast';
+import Stepper from '../../../components/Stepper';
 import { usePlant } from '../hooks/plantsQueries';
 import CareLevelBadge from './CareLevelBadge';
 import type { CareLevel } from '../types';
@@ -24,29 +26,6 @@ function ChevronRightIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="9 18 15 12 9 6" />
     </svg>
-  );
-}
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-interface ToastProps {
-  message: string;
-  visible: boolean;
-}
-
-function Toast({ message, visible }: ToastProps) {
-  return (
-    // aria-live="polite" announces the toast to screen readers without interrupting.
-    // pointer-events-none when hidden prevents invisible element from blocking clicks.
-    <div
-      role="status"
-      aria-live="polite"
-      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl transition-all duration-300 whitespace-nowrap ${
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'
-      }`}
-    >
-      {message}
-    </div>
   );
 }
 
@@ -267,12 +246,13 @@ function CareTipsAccordion({ level }: { level: CareLevel }) {
         className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
       >
         <span>🌿 Care Tips</span>
-        {/* CSS rotate-180 on the caret to show expand/collapse state without a second icon. */}
-        <span
-          className={`text-gray-400 text-xs transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        {/* Chevron rotates 180° when open to indicate collapse direction. */}
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
         >
-          ▾
-        </span>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
       {open && (
         <ul className="px-4 pb-4 pt-1 space-y-2 border-t border-gray-100">
@@ -284,44 +264,6 @@ function CareTipsAccordion({ level }: { level: CareLevel }) {
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-// ─── Stepper ──────────────────────────────────────────────────────────────────
-
-interface StepperProps {
-  value: number;
-  onDecrement: () => void;
-  onIncrement: () => void;
-  min?: number;
-  max?: number;
-}
-
-function Stepper({ value, onDecrement, onIncrement, min = 1, max }: StepperProps) {
-  return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={onDecrement}
-        disabled={value <= min}
-        className="w-11 h-11 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100
-          flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        −
-      </button>
-      {/* tabular-nums prevents the number from shifting layout as it changes width. */}
-      <span className="w-8 text-center font-semibold text-gray-800 text-base tabular-nums">
-        {value}
-      </span>
-      <button
-        onClick={onIncrement}
-        // max is optional — for days stepper there's no upper bound, for quantity it's plant.stock.
-        disabled={max !== undefined && value >= max}
-        className="w-11 h-11 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100
-          flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        +
-      </button>
     </div>
   );
 }
@@ -480,7 +422,7 @@ export default function PlantDetailsPage() {
             </button>
             <span>/</span>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/plants')}
               className="hover:text-green-600 transition-colors"
             >
               Plants
@@ -545,7 +487,16 @@ export default function PlantDetailsPage() {
 
               {/* ── Booking card (available) ── */}
               {!outOfStock && (
-                <div className="border border-gray-200 rounded-xl p-5 bg-white shadow-sm space-y-4">
+                <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+
+                  {/* Low-stock urgency strip — only shown when ≤5 units remain */}
+                  {lowStock && (
+                    <div className="bg-amber-50 border-b border-amber-100 px-5 py-2 text-xs text-amber-700 font-medium">
+                      Only {plant.stock} left — reserve yours now
+                    </div>
+                  )}
+
+                  <div className="p-5 space-y-4">
 
                   {/* Price header */}
                   <div className="flex items-baseline justify-between">
@@ -657,6 +608,7 @@ export default function PlantDetailsPage() {
                       {cartAdding ? 'Adding…' : 'Add to Cart'}
                     </button>
                   </div>
+                  </div>{/* end p-5 space-y-4 */}
                 </div>
               )}
 

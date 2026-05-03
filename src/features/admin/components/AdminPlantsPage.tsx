@@ -142,9 +142,12 @@ export default function AdminPlantsPage() {
             />
             <button
               onClick={openCreate}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5"
             >
-              + Add Plant
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Plant
             </button>
           </div>
         </div>
@@ -180,8 +183,17 @@ export default function AdminPlantsPage() {
                   <tbody>
                     {plants.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">
-                          No plants found.
+                        <td colSpan={8} className="px-4 py-12 text-center">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                  d="M12 22V12m0 0C12 6 7 4 3 6c0 5 3 8 9 6zm0 0c0-6 5-8 9-6-1 5-4 8-9 6z" />
+                              </svg>
+                            </div>
+                            <p className="text-sm text-gray-400 font-medium">No plants found.</p>
+                            {search && <p className="text-xs text-gray-300">Try a different search term.</p>}
+                          </div>
                         </td>
                       </tr>
                     ) : (
@@ -196,11 +208,14 @@ export default function AdminPlantsPage() {
                                 <img
                                   src={plant.images[0]}
                                   alt=""
-                                  className="w-8 h-8 rounded-lg object-cover shrink-0 bg-green-50"
+                                  className="w-10 h-10 rounded-lg object-cover shrink-0 bg-green-50"
                                 />
                               ) : (
-                                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0 text-base">
-                                  🪴
+                                <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                                  <svg className="w-5 h-5 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M12 22V12m0 0C12 6 7 4 3 6c0 5 3 8 9 6zm0 0c0-6 5-8 9-6-1 5-4 8-9 6z" />
+                                  </svg>
                                 </div>
                               )}
                               <span className="font-medium text-gray-800 truncate max-w-[140px]">
@@ -227,26 +242,30 @@ export default function AdminPlantsPage() {
                             <button
                               onClick={() => handleAvailabilityToggle(plant)}
                               disabled={updating}
-                              className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-colors disabled:opacity-50 ${
-                                plant.isAvailable
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                              role="switch"
+                              aria-checked={plant.isAvailable}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                plant.isAvailable ? 'bg-green-500' : 'bg-gray-200'
                               }`}
                             >
-                              {plant.isAvailable ? 'Yes' : 'No'}
+                              <span
+                                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                  plant.isAvailable ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                                }`}
+                              />
                             </button>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => openEdit(plant)}
-                                className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                                className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 px-2.5 py-1 rounded-lg transition-colors"
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => openDelete(plant._id)}
-                                className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                                className="text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors"
                               >
                                 Delete
                               </button>

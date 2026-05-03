@@ -35,7 +35,7 @@ export default function WishlistPage() {
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
-            <div className="text-6xl mb-4">🤍</div>
+            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-5xl mx-auto mb-4 select-none">🤍</div>
             <p className="text-lg font-medium text-gray-600">Your wishlist is empty</p>
             <p className="text-sm mt-1 mb-6">Save plants you like while browsing</p>
             <Link

@@ -88,7 +88,7 @@ export default function LoginPage() {
         {/* Google sign-in — full page redirect to start the OAuth flow */}
         <a
           href={GOOGLE_AUTH_URL}
-          className="flex items-center justify-center gap-3 w-full border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition mb-6"
+          className="flex items-center justify-center gap-3 w-full border-2 border-gray-200 rounded-xl py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:shadow-md hover:border-gray-300 transition mb-6"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -143,7 +143,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-700 hover:bg-green-800 disabled:opacity-60 text-white font-medium rounded-lg py-2.5 text-sm transition flex items-center justify-center gap-2"
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl py-2.5 text-sm transition flex items-center justify-center gap-2"
           >
             {loading && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -155,12 +155,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-green-600 font-medium hover:underline">
-            Register
-          </Link>
-        </p>
+        <div className="bg-gray-50 rounded-xl px-4 py-3 text-center mt-6 border border-gray-100">
+          <p className="text-sm text-gray-500">
+            Don&apos;t have an account?{' '}
+            <Link to="/register" className="text-green-600 font-medium hover:underline">
+              Register
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

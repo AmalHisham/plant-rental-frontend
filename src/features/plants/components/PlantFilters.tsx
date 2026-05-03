@@ -54,18 +54,36 @@ export default function PlantFilters() {
     setParams({});
   };
 
+  // Count how many filters are currently active to show a badge and conditionally render "Clear all".
+  const activeCount = [
+    params.get('search'),
+    params.get('category'),
+    params.get('careLevel'),
+    params.get('minPrice'),
+    params.get('maxPrice'),
+  ].filter(Boolean).length;
+
   return (
     <aside className="w-full lg:w-60 shrink-0 space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
-          Filters
-        </h2>
-        <button
-          onClick={clear}
-          className="text-xs text-green-600 hover:underline"
-        >
-          Clear all
-        </button>
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
+            Filters
+          </h2>
+          {activeCount > 0 && (
+            <span className="w-5 h-5 rounded-full bg-green-600 text-white text-xs font-bold flex items-center justify-center">
+              {activeCount}
+            </span>
+          )}
+        </div>
+        {activeCount > 0 && (
+          <button
+            onClick={clear}
+            className="text-xs text-green-600 hover:underline"
+          >
+            Clear all
+          </button>
+        )}
       </div>
 
       {/* Search */}

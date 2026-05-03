@@ -144,16 +144,22 @@ export default function AdminUsersPage() {
           {isSuperAdmin && (
             <button
               onClick={() => setCreateModalOpen(true)}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5"
             >
-              + Create Admin
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Create Admin
             </button>
           )}
         </div>
 
         {/* Success message */}
         {successMessage && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-start gap-2.5">
+            <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
             {successMessage}
           </div>
         )}
@@ -243,8 +249,19 @@ export default function AdminUsersPage() {
                   <tbody>
                     {users.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-4 py-10 text-center text-gray-400 text-sm">
-                          No users found.
+                        <td colSpan={6} className="px-4 py-12 text-center">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                  d="M17 20h5v-2a4 4 0 00-5.924-3.516M9 20H4v-2a4 4 0 015.924-3.516M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </div>
+                            <p className="text-sm text-gray-400 font-medium">No users found.</p>
+                            {(search || filters.role || filters.isActive !== undefined) && (
+                              <p className="text-xs text-gray-300">Try adjusting your filters.</p>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ) : (
@@ -304,7 +321,7 @@ export default function AdminUsersPage() {
                                   {isSuperAdmin && (
                                     <button
                                       onClick={() => openDeleteConfirm(user._id)}
-                                      className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                                      className="text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
                                     >
                                       Delete
                                     </button>

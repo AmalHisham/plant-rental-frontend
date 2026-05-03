@@ -36,7 +36,7 @@ export default function ProfilePage() {
               <a
                 key={href}
                 href={href}
-                className="shrink-0 text-sm font-medium text-gray-600 px-4 py-3.5 hover:text-green-700 hover:bg-green-50 rounded-t transition"
+                className="shrink-0 text-sm font-medium text-gray-600 px-4 py-3.5 hover:text-green-700 hover:bg-green-50 rounded-t border-b-2 border-transparent hover:border-green-600 transition"
               >
                 {label}
               </a>
@@ -58,14 +58,17 @@ export default function ProfilePage() {
           <>
             {/* White card wrapper for each section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-5 pb-4 border-b border-gray-100">Profile Info</h2>
               <ProfileInfoSection />
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-5 pb-4 border-b border-gray-100">Change Password</h2>
               <ChangePasswordSection />
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-5 pb-4 border-b border-gray-100">Addresses</h2>
               <AddressesSection />
             </div>
           </>

@@ -16,13 +16,16 @@ export default function AdminModal({ open, title, onClose, children, isLoading =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Panel */}
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 className="text-base font-bold text-gray-900">{title}</h2>
+          <div className="flex items-center gap-2.5">
+            <div className="w-1 h-5 bg-green-500 rounded-full" />
+            <h2 className="text-base font-bold text-gray-900">{title}</h2>
+          </div>
           <button
             onClick={handleClose}
             disabled={isLoading}

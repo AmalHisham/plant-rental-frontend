@@ -50,8 +50,8 @@ export default function WishlistButton({ plantId, className = '' }: Props) {
       onClick={handleClick}
       disabled={isPending}
       aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-      className={`flex items-center justify-center w-8 h-8 rounded-full transition-transform
-        hover:scale-110 disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
+      className={`flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm shadow-sm
+        transition-transform hover:scale-110 disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
     >
       {isWishlisted ? (
         // Filled red heart — indicates the plant is already wishlisted.

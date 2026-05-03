@@ -46,7 +46,7 @@ axiosInstance.interceptors.response.use(
 
         // Update the Authorization header on the original failed request and retry it.
         original.headers.Authorization = `Bearer ${newToken}`;
-        return axiosInstance(original);
+        return axiosInstance(original); // retry the original failed request with the new token
       } catch {
         // Refresh failed — clear tokens and send the user to login.
         localStorage.removeItem('accessToken');
@@ -55,7 +55,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error); // for all other errors (400, 404, 500 etc.), pass them to the caller
   }
 );
 

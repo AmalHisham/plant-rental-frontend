@@ -22,8 +22,9 @@ export default function StatusBadge({ value }: Props) {
   const config = BADGE_CONFIG[value] ?? { label: value, classes: 'bg-gray-100 text-gray-600' };
   return (
     <span
-      className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${config.classes}`}
+      className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${config.classes}`}
     >
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 shrink-0" />
       {config.label}
     </span>
   );

@@ -150,7 +150,7 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center space-y-5 max-w-sm">
-          <div className="text-6xl select-none">📦</div>
+          <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-5xl mx-auto select-none">📦</div>
           <h2 className="text-2xl font-bold text-gray-900">No orders yet</h2>
           <p className="text-gray-500 text-sm">
             Your rental orders will appear here once you place one.

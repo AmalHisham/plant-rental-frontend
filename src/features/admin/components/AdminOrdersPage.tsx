@@ -92,6 +92,18 @@ export default function AdminOrdersPage() {
 
         {/* Filters */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Filters</p>
+            <button
+              onClick={clearFilters}
+              className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Clear
+            </button>
+          </div>
           <div className="flex flex-wrap gap-3 items-end">
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Status</label>
@@ -154,13 +166,6 @@ export default function AdminOrdersPage() {
                 onChange={(e) => applyFilter('endDate', e.target.value)}
               />
             </div>
-
-            <button
-              onClick={clearFilters}
-              className="text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
-            >
-              Clear
-            </button>
           </div>
         </div>
 
@@ -206,11 +211,16 @@ export default function AdminOrdersPage() {
                   <tbody>
                     {orders.length === 0 ? (
                       <tr>
-                        <td
-                          colSpan={10}
-                          className="px-4 py-10 text-center text-gray-400 text-sm"
-                        >
-                          No orders match your filters.
+                        <td colSpan={10} className="px-4 py-12 text-center">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                              <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                  d="M20 7l-8-4-8 4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0l-8 4m-8-4l8 4" />
+                              </svg>
+                            </div>
+                            <p className="text-sm text-gray-400 font-medium">No orders match your filters.</p>
+                          </div>
                         </td>
                       </tr>
                     ) : (
@@ -220,7 +230,9 @@ export default function AdminOrdersPage() {
                           <tr
                             key={order._id}
                             className={`border-b border-gray-50 transition-colors ${
-                              isPending ? 'opacity-60' : 'hover:bg-gray-50'
+                              isPending
+                                ? 'opacity-60 bg-amber-50/60 border-l-2 border-l-amber-300'
+                                : 'hover:bg-gray-50 border-l-2 border-l-transparent'
                             }`}
                           >
                             <td className="px-4 py-3 font-mono text-xs text-gray-500">
@@ -267,40 +279,46 @@ export default function AdminOrdersPage() {
 
                             {(canUpdateStatus || canUpdateDamage || canUpdateDeposit) && (
                               <td className="px-4 py-3">
-                                <div className="flex flex-col gap-1.5">
+                                <div className="flex flex-col gap-2 min-w-[120px]">
                                   {canUpdateStatus && (
-                                    <select
-                                      className={selectClass}
-                                      value={order.status}
-                                      disabled={isPending}
-                                      onChange={(e) =>
-                                        handleStatusChange(order, e.target.value as OrderStatus)
-                                      }
-                                    >
-                                      <option value="booked">Booked</option>
-                                      <option value="delivered">Delivered</option>
-                                      <option value="picked">Returned</option>
-                                    </select>
+                                    <div>
+                                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-0.5">Status</p>
+                                      <select
+                                        className={selectClass}
+                                        value={order.status}
+                                        disabled={isPending}
+                                        onChange={(e) =>
+                                          handleStatusChange(order, e.target.value as OrderStatus)
+                                        }
+                                      >
+                                        <option value="booked">Booked</option>
+                                        <option value="delivered">Delivered</option>
+                                        <option value="picked">Returned</option>
+                                      </select>
+                                    </div>
                                   )}
                                   {canUpdateDamage && (
-                                    <select
-                                      className={selectClass}
-                                      value={order.damageStatus}
-                                      disabled={isPending}
-                                      onChange={(e) =>
-                                        handleDamageChange(order, e.target.value as DamageStatus)
-                                      }
-                                    >
-                                      <option value="none">No Damage</option>
-                                      <option value="minor">Minor</option>
-                                      <option value="major">Major</option>
-                                    </select>
+                                    <div>
+                                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-0.5">Damage</p>
+                                      <select
+                                        className={selectClass}
+                                        value={order.damageStatus}
+                                        disabled={isPending}
+                                        onChange={(e) =>
+                                          handleDamageChange(order, e.target.value as DamageStatus)
+                                        }
+                                      >
+                                        <option value="none">No Damage</option>
+                                        <option value="minor">Minor</option>
+                                        <option value="major">Major</option>
+                                      </select>
+                                    </div>
                                   )}
                                   {canUpdateDeposit && (
                                     <button
                                       disabled={isPending}
                                       onClick={() => handleDepositToggle(order)}
-                                      className={`text-xs font-medium px-2 py-1 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                      className={`text-xs font-medium px-2 py-1.5 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                         order.depositRefunded
                                           ? 'border-gray-200 text-gray-500 hover:bg-gray-50'
                                           : 'border-green-200 text-green-700 hover:bg-green-50'

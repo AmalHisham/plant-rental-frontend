@@ -2,18 +2,18 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { AuthState, AuthUser } from './types';
 
+// What the backend sends back after a successful login — all three fields must be present
 interface SetCredentialsPayload {
   user: AuthUser;
   accessToken: string;
   refreshToken: string;
 }
 
-// Reads the persisted session from localStorage so a page refresh doesn't sign the user out.
-// Wrapped in try/catch because JSON.parse throws if the stored value is corrupted.
+
 const loadFromStorage = (): Pick<AuthState, 'user' | 'accessToken' | 'isAuthenticated'> => {
   try {
     const accessToken = localStorage.getItem('accessToken');
-    const userRaw = localStorage.getItem('authUser');
+    const userRaw = localStorage.getItem('authUser'); // raw string of user object (name, email, role) — JSON.parse converts it back to an object below
     if (accessToken && userRaw) {
       return {
         user: JSON.parse(userRaw) as AuthUser,
@@ -27,9 +27,7 @@ const loadFromStorage = (): Pick<AuthState, 'user' | 'accessToken' | 'isAuthenti
   return { user: null, accessToken: null, isAuthenticated: false };
 };
 
-// initialState merges the persisted fields with loading/error defaults.
-// This means on the first render after a page refresh, isAuthenticated is already true
-// if valid tokens exist in localStorage — no flicker to the login screen.
+// Start with whatever was saved in localStorage (so the user stays logged in after refresh)
 const initialState: AuthState = {
   ...loadFromStorage(),
   loading: false,
@@ -68,22 +66,22 @@ const authSlice = createSlice({
       localStorage.removeItem('authUser');
     },
 
+    // show or hide the loading spinner on login/register forms
     setLoading(state, action: PayloadAction<boolean>) {
-      state.loading = action.payload;
+      state.loading = action.payload; // true = show spinner, false = hide spinner
     },
 
-    // setError clears the loading flag atomically so forms never stay stuck in loading state.
+    // save the error message and stop the loading spinner at the same time
     setError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
       state.loading = false;
     },
 
-    // updateUser patches fields on auth.user without touching tokens.
-    // Used after a profile update so the navbar immediately reflects the new name/phone.
+    // update the user's info (name, phone) after a profile edit — without touching the tokens
     updateUser(state, action: PayloadAction<Partial<AuthUser>>) {
       if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-        localStorage.setItem('authUser', JSON.stringify(state.user));
+        state.user = { ...state.user, ...action.payload }; // merge old user fields with the updated ones
+        localStorage.setItem('authUser', JSON.stringify(state.user)); // keep localStorage in sync
       }
     },
   },

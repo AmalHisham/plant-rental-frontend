@@ -74,6 +74,58 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+// ─── Status Timeline ─────────────────────────────────────────────────────────
+
+const ORDER_STEPS: OrderStatus[] = ['booked', 'delivered', 'picked'];
+const STEP_LABELS = ['Booked', 'Delivered', 'Returned'];
+
+function StatusTimeline({ status }: { status: OrderStatus }) {
+  const currentIndex = ORDER_STEPS.indexOf(status);
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+      <div className="flex items-center">
+        {ORDER_STEPS.map((step, i) => {
+          const isCompleted = i < currentIndex;
+          const isCurrent = i === currentIndex;
+          return (
+            <div key={step} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    isCompleted
+                      ? 'bg-green-500'
+                      : isCurrent
+                        ? 'bg-green-600 ring-4 ring-green-100'
+                        : 'bg-gray-200'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <span className={`text-xs font-bold ${isCurrent ? 'text-white' : 'text-gray-400'}`}>
+                      {i + 1}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-xs font-medium whitespace-nowrap ${
+                  isCompleted ? 'text-green-700' : isCurrent ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                }`}>
+                  {STEP_LABELS[i]}
+                </span>
+              </div>
+              {i < ORDER_STEPS.length - 1 && (
+                <div className={`flex-1 h-0.5 mb-5 mx-1 ${i < currentIndex ? 'bg-green-200' : 'bg-gray-200'}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── OrderDetailsPage ─────────────────────────────────────────────────────────
 
 export default function OrderDetailsPage() {
@@ -125,6 +177,9 @@ export default function OrderDetailsPage() {
             <Badge label={order.paymentStatus} className={PAYMENT_STATUS_STYLES[order.paymentStatus]} />
           </div>
         </div>
+
+        {/* Status timeline */}
+        <StatusTimeline status={order.status} />
 
         {/* Plants */}
         <Section title="Plants Rented">

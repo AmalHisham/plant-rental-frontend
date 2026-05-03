@@ -6,28 +6,23 @@ import './index.css';
 import App from './App.tsx';
 import { store } from './store';
 
-// QueryClient is created once and shared across the entire app.
-// staleTime: 5 minutes — data fetched by React Query is kept fresh for 5 minutes
-// before it is considered stale and re-fetched on the next mount.
-// retry: 1 — failed queries are retried once before showing an error.
+// Create one shared React Query instance for the entire app
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
+      staleTime: 1000 * 60 * 5, // keep fetched data fresh for 5 minutes
+      retry: 1, // retry a failed request once before showing an error
     },
   },
 });
 
-// Provider order matters: Redux Provider wraps QueryClientProvider so that
-// query callbacks (e.g. in authSlice side-effects) can access the Redux store.
-// document.getElementById('root')! — the non-null assertion is safe because index.html
-// always has <div id="root">.
+// Find the empty <div id="root"> in index.html and hand it to React
 createRoot(document.getElementById('root')!).render(
+  // Runs components twice in development to catch bugs early (no effect in production)
   <StrictMode>
-    {/* Provider makes the Redux store available to all descendant components via useSelector/useDispatch */}
+    {/* Makes Redux store (login state, user info) available to every component */}
     <Provider store={store}>
-      {/* QueryClientProvider makes the React Query cache available via useQuery/useMutation */}
+      {/* Makes React Query cache (fetched plants, orders, etc.) available to every component */}
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>

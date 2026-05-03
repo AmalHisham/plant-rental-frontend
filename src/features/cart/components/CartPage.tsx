@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BackButton from '../../../components/BackButton';
+import Toast from '../../../components/Toast';
+import Stepper from '../../../components/Stepper';
 import {
   useCart,
   useUpdateCartItem,
@@ -23,69 +25,6 @@ const getApiError = (error: unknown): string => {
   }
   return 'Something went wrong';
 };
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-interface ToastProps {
-  message: string;
-  visible: boolean;
-  type?: 'success' | 'error';
-}
-
-// Cart toast has an error variant (red bg) in addition to the default dark bg,
-// because cart operations can fail for actionable reasons (e.g. stock ran out).
-function Toast({ message, visible, type = 'success' }: ToastProps) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl transition-all duration-300 whitespace-nowrap ${
-        type === 'error' ? 'bg-red-600' : 'bg-gray-900'
-      } ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3 pointer-events-none'}`}
-    >
-      {message}
-    </div>
-  );
-}
-
-// ─── Stepper ──────────────────────────────────────────────────────────────────
-
-interface StepperProps {
-  value: number;
-  onDecrement: () => void;
-  onIncrement: () => void;
-  min?: number;
-  max?: number;
-  disabled?: boolean;
-}
-
-function Stepper({ value, onDecrement, onIncrement, min = 1, max, disabled }: StepperProps) {
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={onDecrement}
-        // disabled prop OR value at min — both cases prevent decrement.
-        disabled={disabled || value <= min}
-        className="w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100
-          flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        −
-      </button>
-      {/* tabular-nums keeps the number width stable so the layout doesn't shift between 1→2 digits. */}
-      <span className="w-7 text-center font-semibold text-gray-800 text-sm tabular-nums">
-        {value}
-      </span>
-      <button
-        onClick={onIncrement}
-        disabled={disabled || (max !== undefined && value >= max)}
-        className="w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100
-          flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-      >
-        +
-      </button>
-    </div>
-  );
-}
 
 // ─── CartItem Card ────────────────────────────────────────────────────────────
 
@@ -159,6 +98,7 @@ function CartItemCard({
           </p>
           {/* max capped at plant.stock so the user can't order more than what's available. */}
           <Stepper
+            size="sm"
             value={item.quantity}
             min={1}
             max={plant.stock}
@@ -173,6 +113,7 @@ function CartItemCard({
           </p>
           {/* No max — user can extend the rental as long as they want. */}
           <Stepper
+            size="sm"
             value={item.rentalDays}
             min={1}
             disabled={isProcessing}
@@ -230,6 +171,7 @@ export default function CartPage() {
   // card's steppers are disabled, not the entire page.
   const [processingPlantId, setProcessingPlantId] = useState<string | null>(null);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
+  const [confirmingClear, setConfirmingClear] = useState(false);
 
   // anyPending: used to disable the checkout button and the "Clear all" action
   // while any mutation is in-flight (prevents concurrent conflicting updates).
@@ -293,6 +235,7 @@ export default function CartPage() {
   };
 
   const handleClearCart = () => {
+    setConfirmingClear(false);
     // clearAll takes no arguments — undefined signals "no payload" to the mutation.
     clearAll(undefined, {
       onSuccess: () => showToast('Cart cleared'),
@@ -345,7 +288,7 @@ export default function CartPage() {
         <Toast message={toast.message} visible={toast.visible} type={toast.type} />
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
           <div className="text-center space-y-5 max-w-sm">
-            <div className="text-6xl select-none">🛒</div>
+            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-5xl mx-auto select-none">🛒</div>
             <h2 className="text-2xl font-bold text-gray-900">Your cart is empty</h2>
             <p className="text-gray-500 text-sm">
               Add some plants to get started with your rental.
@@ -379,13 +322,31 @@ export default function CartPage() {
                 {items.length} {items.length === 1 ? 'item' : 'items'}
               </p>
             </div>
-            <button
-              onClick={handleClearCart}
-              disabled={anyPending}
-              className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Clear all
-            </button>
+            {confirmingClear ? (
+              <div className="flex items-center gap-3 text-sm">
+                <button
+                  onClick={() => setConfirmingClear(false)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearCart}
+                  disabled={anyPending}
+                  className="text-red-500 font-semibold hover:text-red-600 transition-colors disabled:opacity-40"
+                >
+                  Yes, clear
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingClear(true)}
+                disabled={anyPending}
+                className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Clear all
+              </button>
+            )}
           </div>
 
           {/* lg:grid-cols-[1fr_340px]: fixed-width sidebar keeps the order summary
@@ -427,9 +388,12 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <p className="text-[11px] text-gray-400 leading-relaxed">
-                Deposit is fully refunded if plant is returned undamaged after pickup.
-              </p>
+              <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2 text-xs text-green-700 font-medium">
+                <svg className="shrink-0 w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Deposit fully refunded on safe return
+              </div>
 
               <button
                 onClick={() => navigate('/checkout')}
