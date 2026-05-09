@@ -1,4 +1,3 @@
-import Navbar from '../../../components/Navbar';
 import HeroSection from './HeroSection';
 import TrustBar from './TrustBar';
 import HowItWorks from './HowItWorks';
@@ -12,7 +11,6 @@ import Footer from './Footer';
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      <Navbar />
       <HeroSection />
       <TrustBar />
       <HowItWorks />

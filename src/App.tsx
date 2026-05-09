@@ -21,7 +21,7 @@ import CartPage from './features/cart/components/CartPage';
 // Profile
 import ProfilePage from './features/profile/components/ProfilePage';
 
-// Checkout
+// Checkout — intentionally navbar-free (distraction-free checkout pattern)
 import CheckoutPage from './features/checkout/components/CheckoutPage';
 
 // Orders
@@ -31,6 +31,9 @@ import OrderDetailsPage from './features/orders/components/OrderDetailsPage';
 // Route guards — render an Outlet for authorised users, redirect otherwise
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+
+// Layout — renders Navbar + Outlet for all standard (non-admin, non-auth) pages
+import MainLayout from './components/MainLayout';
 
 import ScrollToTopButton from './components/ScrollToTopButton';
 
@@ -48,12 +51,31 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ── Public routes — no login needed ────────────────────────────────── */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/plants" element={<HomePage />} />
-        <Route path="/plants/:id" element={<PlantDetailsPage />} />
+        {/* ── Standard pages — all share the Navbar via MainLayout ────────────── */}
+        <Route element={<MainLayout />}>
+          {/* Public */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/plants" element={<HomePage />} />
+          <Route path="/plants/:id" element={<PlantDetailsPage />} />
 
-        {/* ── Auth routes ─────────────────────────────────────────────────────── */}
+          {/* Protected — redirects to /login if not logged in */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailsPage />} />
+            <Route path="/ai/preview" element={<AIPreviewPage />} />
+            <Route path="/ai/chat" element={<AIChatbotPage />} />
+          </Route>
+        </Route>
+
+        {/* ── Checkout — navbar-free for distraction-free payment flow ────────── */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/checkout" element={<CheckoutPage />} />
+        </Route>
+
+        {/* ── Auth routes — no navbar (full-screen auth forms) ────────────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -61,19 +83,7 @@ function App() {
         {/* Google OAuth sends the user here with tokens in the query params */}
         <Route path="/auth/callback" element={<GoogleCallbackPage />} />
 
-        {/* ── Protected routes — redirects to /login if not logged in ──────────── */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/orders/:id" element={<OrderDetailsPage />} />
-          <Route path="/ai/preview" element={<AIPreviewPage />} />
-          <Route path="/ai/chat" element={<AIChatbotPage />} />
-        </Route>
-
-        {/* ── Admin routes — redirects to / if the user is not an admin ──────── */}
+        {/* ── Admin routes — use AdminLayout sidebar, not the main Navbar ──────── */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/plants" element={<AdminPlantsPage />} />
