@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useAddAddress, useUpdateAddress } from '../hooks/profileQueries';
 import type { Address } from '../types';
+import { COUNTRY_CODE_IN } from '../../../config/constants';
 
 interface AddressFormModalProps {
   isOpen: boolean;
@@ -28,6 +29,9 @@ const getApiError = (error: unknown): string => {
   }
   return 'Something went wrong';
 };
+
+const stripCountryCode = (phone: string) =>
+  phone.startsWith(COUNTRY_CODE_IN) ? phone.slice(COUNTRY_CODE_IN.length) : phone;
 
 export default function AddressFormModal({ isOpen, onClose, initialData }: AddressFormModalProps) {
   const addMutation = useAddAddress();
@@ -64,7 +68,7 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
           ? {
               label: initialData.label,
               recipientName: initialData.recipientName,
-              phone: initialData.phone,
+              phone: stripCountryCode(initialData.phone),
               addressLine1: initialData.addressLine1,
               addressLine2: initialData.addressLine2 ?? '',
               city: initialData.city,
@@ -88,8 +92,9 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
   }, [isOpen, initialData, reset]);
 
   const onSubmit = (data: FormValues) => {
+    const payload = { ...data, phone: COUNTRY_CODE_IN + data.phone };
     if (isEditing) {
-      const { isDefault: _ignored, ...updatePayload } = data;
+      const { isDefault: _ignored, ...updatePayload } = payload;
       updateMutation.mutate(
         { id: initialData!._id, data: updatePayload },
         {
@@ -98,7 +103,7 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
         }
       );
     } else {
-      addMutation.mutate(data, {
+      addMutation.mutate(payload, {
         onSuccess: () => onClose(),
         onError: (err) => setError('root', { message: getApiError(err) }),
       });
@@ -170,16 +175,21 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 Phone <span className="text-red-500">*</span>
               </label>
-              <input
-                type="tel"
-                placeholder="10-digit number"
-                maxLength={10}
-                {...register('phone', {
-                  required: 'Phone is required',
-                  setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 10),
-                })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
-              />
+              <div className="flex">
+                <span className="inline-flex items-center px-3 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-sm text-gray-600 select-none">
+                  {COUNTRY_CODE_IN}
+                </span>
+                <input
+                  type="tel"
+                  placeholder="9876543210"
+                  maxLength={10}
+                  {...register('phone', {
+                    required: 'Phone is required',
+                    setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 10),
+                  })}
+                  className="flex-1 border border-gray-300 rounded-r-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
+                />
+              </div>
               {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
             </div>
 

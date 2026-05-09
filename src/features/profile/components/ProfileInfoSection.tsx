@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useAppSelector } from '../../../store';
 import { useProfile, useUpdateProfile } from '../hooks/profileQueries';
+import { COUNTRY_CODE_IN } from '../../../config/constants';
 
 interface FormValues {
   name: string;
@@ -21,6 +22,10 @@ export default function ProfileInfoSection() {
   const { data } = useProfile();
   const mutation = useUpdateProfile();
 
+  // Strip country code to get local digits for the input field
+  const stripCountryCode = (phone: string | undefined) =>
+    phone?.startsWith(COUNTRY_CODE_IN) ? phone.slice(COUNTRY_CODE_IN.length) : (phone ?? '');
+
   const {
     register,
     handleSubmit,
@@ -31,7 +36,7 @@ export default function ProfileInfoSection() {
     formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<FormValues>({
     // Seed form from Redux immediately (no loading flicker)
-    defaultValues: { name: reduxUser?.name ?? '', phone: reduxUser?.phone ?? '' },
+    defaultValues: { name: reduxUser?.name ?? '', phone: stripCountryCode(reduxUser?.phone) },
   });
 
   const profileUser = data?.data.user;
@@ -41,22 +46,25 @@ export default function ProfileInfoSection() {
   // Update form values when query resolves with fresh server data
   useEffect(() => {
     if (profileUser) {
-      reset({ name: profileUser.name, phone: profileUser.phone ?? '' });
+      reset({ name: profileUser.name, phone: stripCountryCode(profileUser.phone) });
     }
   }, [profileUser, reset]);
 
-  const originalName = profileUser?.name ?? reduxUser?.name ?? '';
   const originalPhone = profileUser?.phone ?? reduxUser?.phone ?? '';
+  const originalName = profileUser?.name ?? reduxUser?.name ?? '';
   const currentName = watch('name');
   const currentPhone = watch('phone');
+  // Compare local digits against stripped original
   const hasChanges =
-    currentName.trim() !== originalName || currentPhone.trim() !== originalPhone;
+    currentName.trim() !== originalName ||
+    (COUNTRY_CODE_IN + currentPhone.replace(/\D/g, '').slice(0, 10)) !== originalPhone;
 
   const onSubmit = (data: FormValues) => {
     clearErrors();
     const payload: { name?: string; phone?: string } = {};
     if (data.name.trim() !== originalName) payload.name = data.name.trim();
-    if (data.phone.trim() !== originalPhone) payload.phone = data.phone.trim() || undefined;
+    const fullPhone = data.phone.trim() ? COUNTRY_CODE_IN + data.phone.replace(/\D/g, '').slice(0, 10) : undefined;
+    if (fullPhone !== originalPhone) payload.phone = fullPhone;
 
     mutation.mutate(payload, {
       onError: (err) => setError('root', { message: getApiError(err) }),
@@ -114,17 +122,21 @@ export default function ProfileInfoSection() {
           <label htmlFor="profile-phone" className="block text-xs font-medium text-gray-600 mb-1">
             Phone Number <span className="text-gray-400 font-normal">(optional)</span>
           </label>
-          <input
-            id="profile-phone"
-            type="tel"
-            placeholder="e.g. 9876543210"
-            {...register('phone', {
-              // Strip non-digits and cap at 10 on change via setValueAs
-              setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 10),
-            })}
-            maxLength={10}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
-          />
+          <div className="flex">
+            <span className="inline-flex items-center px-3 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-sm text-gray-600 select-none">
+              {COUNTRY_CODE_IN}
+            </span>
+            <input
+              id="profile-phone"
+              type="tel"
+              placeholder="9876543210"
+              {...register('phone', {
+                setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 10),
+              })}
+              maxLength={10}
+              className="flex-1 border border-gray-300 rounded-r-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
+            />
+          </div>
         </div>
 
         {errors.root && (
