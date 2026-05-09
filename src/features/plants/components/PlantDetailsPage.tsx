@@ -381,7 +381,15 @@ export default function PlantDetailsPage() {
     if (!isAuthenticated) { navigate('/login'); return; }
     addToCart(buildCartPayload(), {
       onSuccess: () => showToast('✓ Added to cart'),
-      onError: (err) => showToast(getApiError(err)),
+      onError: (err) => {
+        // Plant already in cart — treat as success: the user's goal is already met.
+        if (axios.isAxiosError(err) && err.response?.status === 400 &&
+            err.response?.data?.message?.includes('already in cart')) {
+          navigate('/cart');
+          return;
+        }
+        showToast(getApiError(err));
+      },
     });
   };
 
@@ -390,7 +398,15 @@ export default function PlantDetailsPage() {
     if (!isAuthenticated) { navigate('/login'); return; }
     addToCart(buildCartPayload(), {
       onSuccess: () => navigate('/checkout'),
-      onError: (err) => showToast(getApiError(err)),
+      onError: (err) => {
+        // Plant already in cart — proceed to checkout as if the add succeeded.
+        if (axios.isAxiosError(err) && err.response?.status === 400 &&
+            err.response?.data?.message?.includes('already in cart')) {
+          navigate('/checkout');
+          return;
+        }
+        showToast(getApiError(err));
+      },
     });
   };
 
