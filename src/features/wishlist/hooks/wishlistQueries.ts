@@ -6,20 +6,27 @@ import type { WishlistPlant, WishlistResponse } from '../types';
 export const WISHLIST_QUERY_KEY = 'wishlist';
 
 // Don't fetch for guests — would trigger a 401 and an unnecessary token refresh
-export const useWishlist = () => {
+export const useWishlist = (page = 1, limit = 9) => {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   return useQuery({
-    queryKey: [WISHLIST_QUERY_KEY],
-    queryFn: getWishlist,
+    queryKey: [WISHLIST_QUERY_KEY, page, limit],
+    queryFn: () => getWishlist(page, limit),
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
-// Returns a Set of wishlisted plant IDs for fast heart-icon lookups on plant cards
+// useWishlistIds always fetches page 1 with a large limit to get all IDs for heart-icon lookups.
+// Heart icons need to reflect the full wishlist, not just the current page.
 export const useWishlistIds = (): Set<string> => {
-  const { data } = useWishlist();
-  const plants = data?.data.wishlist.plants ?? [];
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const { data } = useQuery({
+    queryKey: [WISHLIST_QUERY_KEY, 1, 200],
+    queryFn: () => getWishlist(1, 200),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5,
+  });
+  const plants = data?.data.plants ?? [];
   return new Set(plants.map((item) => item.plantId._id));
 };
 
@@ -38,14 +45,11 @@ export const useAddToWishlist = () => {
           ...old,
           data: {
             ...old.data,
-            wishlist: {
-              ...old.data.wishlist,
-              plants: [
-                ...old.data.wishlist.plants,
-                // Only _id matters here — the full plant data arrives after the refetch
-                { plantId: { _id: plantId } as WishlistPlant },
-              ],
-            },
+            plants: [
+              ...old.data.plants,
+              // Only _id matters here — the full plant data arrives after the refetch
+              { plantId: { _id: plantId } as WishlistPlant },
+            ],
           },
         };
       });
@@ -78,12 +82,9 @@ export const useRemoveFromWishlist = () => {
           ...old,
           data: {
             ...old.data,
-            wishlist: {
-              ...old.data.wishlist,
-              plants: old.data.wishlist.plants.filter(
-                (item) => item.plantId._id !== plantId
-              ),
-            },
+            plants: old.data.plants.filter(
+              (item) => item.plantId._id !== plantId
+            ),
           },
         };
       });

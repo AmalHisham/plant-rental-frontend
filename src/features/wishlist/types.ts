@@ -23,9 +23,14 @@ export interface Wishlist {
   plants: WishlistItem[];
 }
 
+export interface WishlistPagination {
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
 export interface WishlistResponse {
   success: true;
-  data: {
-    wishlist: Wishlist;
-  };
+  data: Wishlist;
+  pagination: WishlistPagination;
 }

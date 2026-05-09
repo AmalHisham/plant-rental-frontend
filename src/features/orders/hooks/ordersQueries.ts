@@ -3,10 +3,10 @@ import { getMyOrders, getMyOrderById } from '../utils/ordersApi';
 
 export const ORDERS_QUERY_KEY = 'myOrders';
 
-export const useMyOrders = () =>
+export const useMyOrders = (page = 1, limit = 10) =>
   useQuery({
-    queryKey: [ORDERS_QUERY_KEY],
-    queryFn: getMyOrders,
+    queryKey: [ORDERS_QUERY_KEY, page, limit],
+    queryFn: () => getMyOrders(page, limit),
   });
 
 export const useMyOrderById = (id: string) =>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/BackButton';
 import { useMyOrders } from '../hooks/ordersQueries';
@@ -103,6 +104,31 @@ function OrderCard({ order }: { order: Order }) {
   );
 }
 
+// ─── Pagination ───────────────────────────────────────────────────────────────
+
+function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex justify-center items-center gap-2 mt-10">
+      <button
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+        className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
+      <button
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+        className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function OrdersSkeleton() {
@@ -118,7 +144,8 @@ function OrdersSkeleton() {
 // ─── OrdersPage ───────────────────────────────────────────────────────────────
 
 export default function OrdersPage() {
-  const { data, isLoading, isError } = useMyOrders();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError } = useMyOrders(page);
 
   if (isLoading) {
     return (
@@ -145,8 +172,9 @@ export default function OrdersPage() {
   }
 
   const orders = data?.data ?? [];
+  const pagination = data?.pagination;
 
-  if (orders.length === 0) {
+  if (orders.length === 0 && page === 1) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center space-y-5 max-w-sm">
@@ -172,9 +200,11 @@ export default function OrdersPage() {
         <BackButton className="mb-4" />
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {orders.length} {orders.length === 1 ? 'order' : 'orders'}
-          </p>
+          {pagination && (
+            <p className="text-sm text-gray-500 mt-0.5">
+              {pagination.total} {pagination.total === 1 ? 'order' : 'orders'}
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -182,6 +212,17 @@ export default function OrdersPage() {
             <OrderCard key={order._id} order={order} />
           ))}
         </div>
+
+        {pagination && (
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={(p) => {
+              setPage(p);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
       </div>
     </div>
   );

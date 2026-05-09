@@ -37,9 +37,16 @@ export interface Order {
   updatedAt: string;
 }
 
+export interface PaginationInfo {
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
 export interface OrdersResponse {
   success: true;
   data: Order[];
+  pagination: PaginationInfo;
 }
 
 export interface OrderResponse {

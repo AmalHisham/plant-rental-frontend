@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logout } from '../features/auth/authSlice';
-import { useWishlist } from '../features/wishlist/hooks/wishlistQueries';
+import { useWishlistIds } from '../features/wishlist/hooks/wishlistQueries';
 import { useCart } from '../features/cart/hooks/cartQueries';
 import type { UserRole } from '../features/auth/types';
 
@@ -97,9 +97,8 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const location = useLocation();
 
-  // ?? 0 handles the undefined loading state before data arrives
-  const { data: wishlistData } = useWishlist();
-  const wishlistCount = wishlistData?.data.wishlist.plants.length ?? 0;
+  const wishlistIds = useWishlistIds();
+  const wishlistCount = wishlistIds.size;
 
   const { data: cartData } = useCart();
   const cartCount = cartData?.data.cart.items.length ?? 0;
