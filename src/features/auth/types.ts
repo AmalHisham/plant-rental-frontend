@@ -1,5 +1,4 @@
-// UserRole mirrors the backend's UserRole union in user.model.ts.
-// Keeping a frontend copy prevents the UI from needing to hardcode strings for role checks.
+// All possible user roles in the app
 export type UserRole =
   | 'user'
   | 'super_admin'
@@ -8,8 +7,7 @@ export type UserRole =
   | 'delivery_admin'
   | 'user_admin';
 
-// Minimal user shape stored in Redux and localStorage after login/register.
-// Sensitive fields (password, tokens) are never stored here.
+// Basic user info saved in Redux and localStorage after login
 export interface AuthUser {
   _id: string;
   name: string;
@@ -18,7 +16,7 @@ export interface AuthUser {
   role: UserRole;
 }
 
-// Request payload types — typed to match the exact JSON bodies the backend expects.
+// What the frontend sends to the backend for each auth action
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -35,11 +33,11 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
-  token: string;       // raw token from the reset email URL query param
+  token: string;       // token from the reset-password email link
   newPassword: string;
 }
 
-// Response type for endpoints that issue tokens (login, register, Google OAuth).
+// What the backend returns after a successful login, register, or Google OAuth
 export interface AuthResponse {
   success: true;
   data: {
@@ -49,13 +47,13 @@ export interface AuthResponse {
   };
 }
 
-// Response type for endpoints that only confirm an action (forgot password, logout).
+// What the backend returns for actions that don't need to return data (e.g. logout)
 export interface MessageResponse {
   success: true;
   message: string;
 }
 
-// Response type for the /api/auth/refresh-token endpoint — only a new accessToken is returned.
+// What the backend returns when refreshing the access token
 export interface RefreshTokenResponse {
   success: true;
   data: {
@@ -63,8 +61,7 @@ export interface RefreshTokenResponse {
   };
 }
 
-// Redux slice state shape. loading and error are kept here so auth forms can
-// use them via useAppSelector instead of local state.
+// The shape of the auth section inside the Redux store
 export interface AuthState {
   user: AuthUser | null;
   accessToken: string | null;

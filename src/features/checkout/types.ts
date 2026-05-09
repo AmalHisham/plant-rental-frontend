@@ -61,18 +61,18 @@ export interface VerifyPaymentRequest {
   signature: string;
 }
 
-// ─── Response envelopes ───────────────────────────────────────────────────────
+// ─── Response types ───────────────────────────────────────────────────────────
 
 export interface CheckoutResponse {
   success: true;
-  data: Order;   // backend: res.json({ success: true, data: order }) — order is directly in data
+  data: Order;
 }
 
 export interface CreatePaymentResponse {
   success: true;
   data: {
     razorpayOrderId: string;
-    amount: number;      // INR (not paise) — multiply by 100 when passing to Razorpay widget
+    amount: number;      // in INR — multiply by 100 before passing to the Razorpay widget
     currency: string;
     paymentId: string;
   };
@@ -83,9 +83,7 @@ export interface VerifyPaymentResponse {
   data: { payment: Payment };
 }
 
-// ─── Razorpay global type ─────────────────────────────────────────────────────
-
-// Razorpay loads via a <script> tag; declare it on window so TypeScript accepts it.
+// Razorpay is loaded via a <script> tag at runtime — this tells TypeScript it exists on window
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

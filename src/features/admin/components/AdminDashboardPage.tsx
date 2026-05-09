@@ -13,6 +13,7 @@ import type {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// redirects non-super_admin roles to the section they have access to
 function getDefaultAdminRoute(role: UserRole): string {
   if (role === 'product_admin') return '/admin/plants';
   if (role === 'order_admin' || role === 'delivery_admin') return '/admin/orders';
@@ -20,6 +21,7 @@ function getDefaultAdminRoute(role: UserRole): string {
   return '/admin';
 }
 
+// formats ISO date to readable string e.g. "7 May 2026"
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -27,6 +29,7 @@ const formatDate = (iso: string) =>
     year: 'numeric',
   });
 
+// formats number to Indian currency e.g. "₹1,50,000"
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 
@@ -271,7 +274,7 @@ function DashboardSkeleton() {
 export default function AdminDashboardPage() {
   const role = useAppSelector((s) => s.auth.user?.role);
 
-  // Redirect non-super_admin roles to their appropriate section.
+  // non-super_admin roles can't see the dashboard — redirect them to their section
   if (role && role !== 'super_admin') {
     return <Navigate to={getDefaultAdminRoute(role)} replace />;
   }

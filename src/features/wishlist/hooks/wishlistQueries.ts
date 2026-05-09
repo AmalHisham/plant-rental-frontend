@@ -5,21 +5,18 @@ import type { WishlistPlant, WishlistResponse } from '../types';
 
 export const WISHLIST_QUERY_KEY = 'wishlist';
 
-// Fetch only for authenticated users — avoids a 401 that would trigger the
-// refresh interceptor loop for guests browsing the homepage.
+// Don't fetch for guests — would trigger a 401 and an unnecessary token refresh
 export const useWishlist = () => {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   return useQuery({
     queryKey: [WISHLIST_QUERY_KEY],
     queryFn: getWishlist,
     enabled: isAuthenticated,
-    staleTime: 1000 * 60 * 5,  // 5 min — wishlist changes infrequently, mutations invalidate anyway
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
-// Derived hook that exposes a Set<string> of wishlisted plant IDs.
-// A Set provides O(1) .has() lookup so every PlantCard heart icon check is fast,
-// even when rendering grids of 50+ cards simultaneously.
+// Returns a Set of wishlisted plant IDs for fast heart-icon lookups on plant cards
 export const useWishlistIds = (): Set<string> => {
   const { data } = useWishlist();
   const plants = data?.data.wishlist.plants ?? [];
@@ -30,8 +27,8 @@ export const useAddToWishlist = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addToWishlist,
-    // Optimistic update: the heart fills instantly without waiting for the server.
-    // Steps: cancel in-flight refetch → snapshot old state → apply optimistic change.
+    // Optimistic update: fill the heart icon immediately, before the server responds.
+    // If the request fails, we roll back to the previous state.
     onMutate: async (plantId: string) => {
       await queryClient.cancelQueries({ queryKey: [WISHLIST_QUERY_KEY] });
       const previous = queryClient.getQueryData<WishlistResponse>([WISHLIST_QUERY_KEY]);
@@ -45,8 +42,7 @@ export const useAddToWishlist = () => {
               ...old.data.wishlist,
               plants: [
                 ...old.data.wishlist.plants,
-                // Only _id is needed for the Set membership check — full plant
-                // data arrives after onSettled re-fetches from the server.
+                // Only _id matters here — the full plant data arrives after the refetch
                 { plantId: { _id: plantId } as WishlistPlant },
               ],
             },
@@ -55,14 +51,14 @@ export const useAddToWishlist = () => {
       });
       return { previous };
     },
-    // Roll back the optimistic update if the request fails.
     onError: (_err, _plantId, context) => {
+      // Roll back to the saved state if the request failed
       if (context?.previous) {
         queryClient.setQueryData([WISHLIST_QUERY_KEY], context.previous);
       }
     },
-    // Always refetch after settle so the full populated plant data is in cache.
     onSettled: () => {
+      // Always refetch so we have the full plant data in the cache
       void queryClient.invalidateQueries({ queryKey: [WISHLIST_QUERY_KEY] });
     },
   });
@@ -72,7 +68,7 @@ export const useRemoveFromWishlist = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeFromWishlist,
-    // Same optimistic pattern as add — heart empties immediately, rolls back on error.
+    // Same optimistic pattern as add — empty the heart immediately, roll back on error
     onMutate: async (plantId: string) => {
       await queryClient.cancelQueries({ queryKey: [WISHLIST_QUERY_KEY] });
       const previous = queryClient.getQueryData<WishlistResponse>([WISHLIST_QUERY_KEY]);

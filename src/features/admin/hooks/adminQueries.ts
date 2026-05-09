@@ -43,7 +43,7 @@ export const useAdminDashboard = () =>
     staleTime: 1000 * 60 * 2,
   });
 
-// ─── Admin Orders ─────────────────────────────────────────────────────────────
+// ─── Orders ───────────────────────────────────────────────────────────────────
 
 export const useAdminOrders = (filters?: AdminOrdersFilters) =>
   useQuery({
@@ -79,8 +79,8 @@ export const useUpdateOrderDeposit = () => {
 };
 
 // ─── Plants ───────────────────────────────────────────────────────────────────
-// Reads reuse PLANTS_QUERY_KEY + getAllPlants so admin mutations also refresh
-// the public browse page cache automatically.
+// Uses the same PLANTS_QUERY_KEY as the public browse page, so admin mutations
+// also refresh the plant list that customers see.
 
 export const useAdminPlants = (filters?: AdminPlantsFilters) =>
   useQuery({

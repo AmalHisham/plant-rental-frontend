@@ -1,16 +1,13 @@
 import axios from 'axios';
 
-// Single shared Axios instance used by every feature API module.
-// withCredentials: true sends cookies cross-origin (required if cookies are ever used;
-// currently the app uses Authorization headers, but this ensures forward compatibility).
+// One shared axios instance used by all API files.
+// withCredentials lets cookies be sent cross-origin (not used yet, but good to have).
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   withCredentials: true,
 });
 
-// ── Request interceptor ───────────────────────────────────────────────────────
-// Attaches the access token from localStorage to every outgoing request so
-// individual API functions don't need to read localStorage themselves.
+// Before every request: attach the saved access token so the user stays logged in.
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -19,23 +16,21 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Response interceptor ──────────────────────────────────────────────────────
-// Handles 401 responses with a single transparent token refresh attempt.
-// _retry flag on the original config prevents an infinite retry loop if the
-// refresh endpoint itself returns 401 (expired/invalid refresh token).
+// After every response: if the server says "not authorised" (401), try refreshing the token once.
+// _retry stops the retry from looping if the refresh itself also fails.
 axiosInstance.interceptors.response.use(
-  (response) => response, // pass through successful responses unchanged
+  (response) => response, // success — return as-is
 
   async (error) => {
     const original = error.config;
 
     if (error.response?.status === 401 && !original._retry) {
-      original._retry = true; // mark so we don't retry the same request twice
+      original._retry = true; // don't retry the same request twice
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
 
-        // Use a raw axios call (not axiosInstance) to avoid triggering this interceptor again.
+        // Use plain axios (not axiosInstance) so this interceptor doesn't trigger again.
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/refresh-token`,
           { refreshToken }
@@ -44,18 +39,18 @@ axiosInstance.interceptors.response.use(
         const newToken = data.data.accessToken;
         localStorage.setItem('accessToken', newToken);
 
-        // Update the Authorization header on the original failed request and retry it.
+        // Retry the original request with the new token.
         original.headers.Authorization = `Bearer ${newToken}`;
-        return axiosInstance(original); // retry the original failed request with the new token
+        return axiosInstance(original);
       } catch {
-        // Refresh failed — clear tokens and send the user to login.
+        // Refresh failed — log the user out.
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
       }
     }
 
-    return Promise.reject(error); // for all other errors (400, 404, 500 etc.), pass them to the caller
+    return Promise.reject(error); // all other errors (400, 404, 500…) go to the caller
   }
 );
 

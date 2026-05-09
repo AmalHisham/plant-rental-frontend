@@ -1,11 +1,11 @@
 interface Props {
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+  page: number;                          // current active page number
+  totalPages: number;                    // total number of pages available
+  onPageChange: (page: number) => void;  // fires with page-1 or page+1 when Prev/Next clicked
 }
 
 export default function Pagination({ page, totalPages, onPageChange }: Props) {
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) return null; // no point showing pagination if everything fits on one page
 
   return (
     <div className="flex items-center justify-between px-1 pt-4">

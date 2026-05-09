@@ -18,6 +18,7 @@ import type { UserRole } from '../../auth/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// converts ISO date string to readable format e.g. "7 May 2026"
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -25,6 +26,7 @@ const formatDate = (iso: string) =>
     year: 'numeric',
   });
 
+// human-readable labels for each role
 const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
   product_admin: 'Product Admin',
@@ -34,6 +36,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   user: 'User',
 };
 
+// badge colors for each role
 const ROLE_BADGE_CLASSES: Record<UserRole, string> = {
   super_admin: 'bg-purple-100 text-purple-700',
   product_admin: 'bg-green-100 text-green-700',
@@ -46,20 +49,20 @@ const ROLE_BADGE_CLASSES: Record<UserRole, string> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminUsersPage() {
-  const currentUser = useAppSelector((s) => s.auth.user);
+  const currentUser = useAppSelector((s) => s.auth.user); // logged-in admin from Redux store
   const role = currentUser?.role;
-  const isSuperAdmin = role === 'super_admin';
+  const isSuperAdmin = role === 'super_admin'; // only super_admin can create/delete users
 
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 400);
+  const debouncedSearch = useDebounce(search, 400); // wait 400ms after typing before searching
   const [filters, setFilters] = useState<AdminUsersFilters>({ page: 1, limit: 10 });
 
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false); // controls "Create Admin" modal visibility
+  const [confirmOpen, setConfirmOpen] = useState(false);         // controls delete confirmation dialog
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null); // id of user being deleted
+  const [successMessage, setSuccessMessage] = useState('');      // shown after admin is created
 
-  // Merge debounced search into filters
+  // combine filters with debounced search before sending to API
   const queryFilters: AdminUsersFilters = {
     ...filters,
     search: debouncedSearch || undefined,
@@ -72,13 +75,13 @@ export default function AdminUsersPage() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setFilters((prev) => ({ ...prev, page: 1 }));
+    setFilters((prev) => ({ ...prev, page: 1 })); // reset to page 1 on new search
   };
 
   const applyRoleFilter = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      role: value ? (value as UserRole) : undefined,
+      role: value ? (value as UserRole) : undefined, // clear role filter if empty string selected
       page: 1,
     }));
   };
@@ -86,15 +89,17 @@ export default function AdminUsersPage() {
   const applyActiveFilter = (value: string) => {
     setFilters((prev) => ({
       ...prev,
-      isActive: value === '' ? undefined : value === 'true',
+      isActive: value === '' ? undefined : value === 'true', // convert string "true"/"false" to boolean
       page: 1,
     }));
   };
 
+  // flip the user's active status (active → inactive, inactive → active)
   const handleToggleStatus = (userId: string, isActive: boolean) => {
     toggleStatus({ id: userId, body: { isActive: !isActive } });
   };
 
+  // store which user to delete and open the confirm dialog
   const openDeleteConfirm = (userId: string) => {
     setDeletingUserId(userId);
     setConfirmOpen(true);
@@ -105,7 +110,7 @@ export default function AdminUsersPage() {
     removeUser(deletingUserId, {
       onSuccess: () => {
         setConfirmOpen(false);
-        setDeletingUserId(null);
+        setDeletingUserId(null); // clear after deletion
       },
     });
   };
@@ -117,13 +122,13 @@ export default function AdminUsersPage() {
         setSuccessMessage(
           `Admin account created. Login instructions have been sent to ${formData.email}.`,
         );
-        setTimeout(() => setSuccessMessage(''), 5000);
+        setTimeout(() => setSuccessMessage(''), 5000); // hide success message after 5 seconds
       },
     });
   };
 
-  const users = data?.data.users ?? [];
-  const totalPages = data?.data.totalPages ?? 1;
+  const users = data?.data.users ?? [];         // list of users or empty array while loading
+  const totalPages = data?.data.totalPages ?? 1; // total pages for pagination
 
   const selectClass =
     'border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white';
@@ -274,7 +279,7 @@ export default function AdminUsersPage() {
                           >
                             <td className="px-4 py-3 font-medium text-gray-800">
                               {user.name}
-                              {isSelf && (
+                              {isSelf && ( // show "You" label next to the logged-in admin's own row
                                 <span className="ml-2 text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                                   You
                                 </span>
@@ -304,7 +309,7 @@ export default function AdminUsersPage() {
                             </td>
                             <td className="px-4 py-3">
                               {isSelf ? (
-                                <span className="text-xs text-gray-300">—</span>
+                                <span className="text-xs text-gray-300">—</span> // no actions on your own account
                               ) : (
                                 <div className="flex items-center gap-2">
                                   <button

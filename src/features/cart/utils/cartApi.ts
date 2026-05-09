@@ -1,17 +1,13 @@
 import axiosInstance from '../../../api/axiosInstance';
 import type { CartResponse, AddToCartRequest, UpdateCartItemRequest } from '../types';
 
-// All cart operations use the shared authenticated axios client so the
-// request interceptor automatically injects the Authorization header.
-
 export const getCart = (): Promise<CartResponse> =>
   axiosInstance.get('/api/cart').then((r) => r.data);
 
 export const addToCart = (data: AddToCartRequest): Promise<CartResponse> =>
   axiosInstance.post('/api/cart/items', data).then((r) => r.data);
 
-// plantId in the path identifies which item to update (the backend uses it to match
-// the items array element by its embedded plantId).
+// plantId in the URL tells the backend which cart item to update
 export const updateCartItem = ({
   plantId,
   data,
@@ -24,7 +20,6 @@ export const updateCartItem = ({
 export const removeFromCart = (plantId: string): Promise<CartResponse> =>
   axiosInstance.delete(`/api/cart/items/${plantId}`).then((r) => r.data);
 
-// clearCart empties all items but keeps the cart document — the backend returns
-// a message instead of the cart because the cart is now empty.
+// Removes all items — backend returns a message (not the empty cart)
 export const clearCart = (): Promise<{ success: true; message: string }> =>
   axiosInstance.delete('/api/cart').then((r) => r.data);

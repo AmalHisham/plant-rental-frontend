@@ -39,6 +39,7 @@ import AdminDashboardPage from './features/admin/components/AdminDashboardPage';
 import AdminPlantsPage from './features/admin/components/AdminPlantsPage';
 import AdminOrdersPage from './features/admin/components/AdminOrdersPage';
 import AdminUsersPage from './features/admin/components/AdminUsersPage';
+import AdminProfilePage from './features/admin/components/AdminProfilePage';
 
 const AIPreviewPage = () => <div className="p-8 text-xl">AI Office Preview</div>;
 const AIChatbotPage = () => <div className="p-8 text-xl">AI Chatbot</div>;
@@ -47,8 +48,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ── Public routes ──────────────────────────────────────────────────── */}
-        {/* These pages are accessible without a login (marketing, browsing, auth flows). */}
+        {/* ── Public routes — no login needed ────────────────────────────────── */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/plants" element={<HomePage />} />
         <Route path="/plants/:id" element={<PlantDetailsPage />} />
@@ -58,12 +58,10 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        {/* /auth/callback receives tokens as query params after Google OAuth redirect */}
+        {/* Google OAuth sends the user here with tokens in the query params */}
         <Route path="/auth/callback" element={<GoogleCallbackPage />} />
 
-        {/* ── Protected user routes ────────────────────────────────────────────── */}
-        {/* ProtectedRoute renders an Outlet when the user is logged in,
-            or redirects to /login if no access token is found. */}
+        {/* ── Protected routes — redirects to /login if not logged in ──────────── */}
         <Route element={<ProtectedRoute />}>
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
@@ -75,20 +73,19 @@ function App() {
           <Route path="/ai/chat" element={<AIChatbotPage />} />
         </Route>
 
-        {/* ── Admin-only routes ───────────────────────────────────────────────── */}
-        {/* AdminRoute renders an Outlet only for users whose role is not 'user',
-            or redirects to / for regular users who navigate here directly. */}
+        {/* ── Admin routes — redirects to / if the user is not an admin ──────── */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/plants" element={<AdminPlantsPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route path="/admin/profile" element={<AdminProfilePage />} />
         </Route>
 
-        {/* Catch-all: unknown paths go to the landing page */}
+        {/* Any unknown URL → home page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {/* ScrollToTopButton is outside <Routes> so it persists across all pages */}
+      {/* Outside <Routes> so it stays visible on every page */}
       <ScrollToTopButton />
     </BrowserRouter>
   );

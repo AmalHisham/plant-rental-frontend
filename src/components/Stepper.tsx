@@ -5,7 +5,7 @@ export interface StepperProps {
   min?: number;
   max?: number;
   disabled?: boolean;
-  /** 'md' (default) = w-11 h-11 for booking cards; 'sm' = w-8 h-8 for cart items */
+  /** 'md' (default) for booking cards; 'sm' for cart items */
   size?: 'sm' | 'md';
 }
 
@@ -30,7 +30,7 @@ export default function Stepper({
       >
         −
       </button>
-      {/* tabular-nums keeps the number width stable so the layout doesn't shift between 1→2 digits. */}
+      {/* tabular-nums stops the layout from shifting when the number changes width (e.g. 9 → 10) */}
       <span className={`${size === 'sm' ? 'w-7 text-sm' : 'w-8 text-base'} text-center font-semibold text-gray-800 tabular-nums`}>
         {value}
       </span>

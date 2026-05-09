@@ -1,6 +1,6 @@
 export type CareLevel = 'easy' | 'medium' | 'hard';
 
-// Shared card shape so browse, wishlist, and cart views can reuse the same component.
+// Minimal plant info used on cards (browse, wishlist, cart)
 export interface PlantCardData {
   _id: string;
   name: string;

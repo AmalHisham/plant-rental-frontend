@@ -36,7 +36,7 @@ export const useUpdateProfile = () => {
     mutationFn: updateProfile,
     onSuccess: (data) => {
       const { name, phone } = data.data.user;
-      // Sync the Redux store (and localStorage) so the navbar reflects the new name/phone.
+      // Also update Redux + localStorage so the navbar shows the new name right away
       dispatch(updateUser({ name, phone }));
       void queryClient.invalidateQueries({ queryKey: [PROFILE_QUERY_KEY] });
     },

@@ -22,7 +22,7 @@ import type {
 export const getAdminDashboard = (): Promise<DashboardResponse> =>
   axiosInstance.get('/api/admin/dashboard').then((r) => r.data);
 
-// ─── Admin Orders ─────────────────────────────────────────────────────────────
+// ─── Orders ───────────────────────────────────────────────────────────────────
 
 export const getAdminOrders = (filters?: AdminOrdersFilters): Promise<AdminOrdersResponse> =>
   axiosInstance.get('/api/admin/orders', { params: filters }).then((r) => r.data);
@@ -46,8 +46,7 @@ export const updateOrderDeposit = (
   axiosInstance.patch(`/api/orders/${id}/deposit`, body).then((r) => r.data);
 
 // ─── Plants ───────────────────────────────────────────────────────────────────
-// Plant reads reuse getAllPlants from plantsApi.ts (public GET endpoint).
-// Only write operations are defined here.
+// Plant reads use getAllPlants from plantsApi.ts — only write operations are here
 
 export const createPlant = (body: CreatePlantRequest): Promise<AdminPlantResponse> =>
   axiosInstance.post('/api/plants', body).then((r) => r.data);
@@ -58,8 +57,7 @@ export const updatePlant = (id: string, body: UpdatePlantRequest): Promise<Admin
 export const deletePlant = (id: string): Promise<AdminMessageResponse> =>
   axiosInstance.delete(`/api/plants/${id}`).then((r) => r.data);
 
-// FormData upload — axiosInstance sends multipart/form-data automatically when
-// the body is a FormData object (browser sets the Content-Type with boundary).
+// Browser sets the correct multipart/form-data content-type automatically for FormData
 export const uploadPlantImages = (id: string, files: File[]): Promise<AdminPlantResponse> => {
   const form = new FormData();
   files.forEach((f) => form.append('images', f));
@@ -86,7 +84,7 @@ export const toggleUserStatus = (
 export const deleteUser = (id: string): Promise<AdminMessageResponse> =>
   axiosInstance.delete(`/api/users/${id}`).then((r) => r.data);
 
-// ─── Admin provisioning ───────────────────────────────────────────────────────
+// ─── Create admin ─────────────────────────────────────────────────────────────
 
 export const createAdmin = (body: CreateAdminRequest): Promise<AdminMessageResponse> =>
   axiosInstance.post('/api/admin/create-admin', body).then((r) => r.data);

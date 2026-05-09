@@ -1,8 +1,6 @@
 import type { CareLevel } from '../plants/types';
 
-// WishlistPlant is the populated plant shape returned by GET /api/wishlist.
-// The backend populates plants[].plantId via Mongoose .populate() so the client
-// receives full plant data without a second fetch.
+// Full plant info returned by the wishlist API (backend populates this automatically)
 export interface WishlistPlant {
   _id: string;
   name: string;
@@ -15,8 +13,7 @@ export interface WishlistPlant {
   stock: number;
 }
 
-// WishlistItem wraps the populated plant — the DB stores only the ObjectId
-// reference but the API always returns the populated version.
+// Each wishlist entry holds the full plant object (not just the ID)
 export interface WishlistItem {
   plantId: WishlistPlant;
 }

@@ -9,9 +9,7 @@ import type {
   ResetPasswordRequest,
 } from '../types';
 
-// Thin API layer — each function is a single Axios call that resolves to the typed response body.
-// Keeping these separate from React Query hooks and Redux actions means the HTTP plumbing
-// is testable and reusable without importing UI-layer dependencies.
+// One function per auth endpoint — each just calls the API and returns the response data
 
 export const registerApi = (body: RegisterRequest): Promise<AuthResponse> =>
   axiosInstance.post<AuthResponse>('/api/auth/register', body).then((r) => r.data);

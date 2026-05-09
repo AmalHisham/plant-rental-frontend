@@ -21,13 +21,13 @@ import type { CreatePlantRequest } from '../types';
 export default function AdminPlantsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 400);
+  const debouncedSearch = useDebounce(search, 400); // wait 400ms after typing before searching
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingPlant, setEditingPlant] = useState<Plant | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);          // controls plant form modal
+  const [editingPlant, setEditingPlant] = useState<Plant | null>(null); // null = create mode, plant = edit mode
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);      // controls delete confirm dialog
+  const [deletingId, setDeletingId] = useState<string | null>(null); // id of plant to delete
 
   const { data, isLoading, isError } = useAdminPlants({
     search: debouncedSearch || undefined,
@@ -41,30 +41,31 @@ export default function AdminPlantsPage() {
   const { mutate: uploadImages, isPending: uploading } = useUploadPlantImages();
   const { mutate: deleteImage } = useDeletePlantImage();
 
-  const isMutating = creating || updating || uploading;
+  const isMutating = creating || updating || uploading; // true while any write operation is in progress
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setPage(1);
+    setPage(1); // reset to page 1 on new search
   };
 
   const openCreate = () => {
-    setEditingPlant(null);
+    setEditingPlant(null);  // no plant = create mode
     setModalOpen(true);
   };
 
   const openEdit = (plant: Plant) => {
-    setEditingPlant(plant);
+    setEditingPlant(plant); // pass plant = edit mode
     setModalOpen(true);
   };
 
   const openDelete = (id: string) => {
-    setDeletingId(id);
-    setConfirmOpen(true);
+    setDeletingId(id);      // store which plant to delete
+    setConfirmOpen(true);   // show confirm dialog
   };
 
   const handlePlantSubmit = (formData: CreatePlantRequest, newFiles: File[]) => {
     if (editingPlant) {
+      // edit mode: update plant fields first, then upload new images if any
       update(
         { id: editingPlant._id, body: formData },
         {
@@ -72,15 +73,16 @@ export default function AdminPlantsPage() {
             if (newFiles.length > 0) {
               uploadImages(
                 { id: editingPlant._id, files: newFiles },
-                { onSuccess: () => setModalOpen(false) },
+                { onSuccess: () => setModalOpen(false) }, // close modal after images uploaded
               );
             } else {
-              setModalOpen(false);
+              setModalOpen(false); // no new images, close immediately
             }
           },
         },
       );
     } else {
+      // create mode: create plant first, then upload images using the new plant's id
       create(formData, {
         onSuccess: (res) => {
           const plantId = res.data._id;
@@ -99,11 +101,11 @@ export default function AdminPlantsPage() {
 
   const handleDeleteImage = (url: string) => {
     if (!editingPlant) return;
-    deleteImage({ id: editingPlant._id, imageUrl: url });
+    deleteImage({ id: editingPlant._id, imageUrl: url }); // delete specific image by URL
   };
 
   const handleAvailabilityToggle = (plant: Plant) => {
-    update({ id: plant._id, body: { isAvailable: !plant.isAvailable } });
+    update({ id: plant._id, body: { isAvailable: !plant.isAvailable } }); // flip availability
   };
 
   const handleDelete = () => {
@@ -111,13 +113,13 @@ export default function AdminPlantsPage() {
     remove(deletingId, {
       onSuccess: () => {
         setConfirmOpen(false);
-        setDeletingId(null);
+        setDeletingId(null); // clear after deletion
       },
     });
   };
 
-  const plants = data?.data.plants ?? [];
-  const totalPages = data?.data.pagination.totalPages ?? 1;
+  const plants = data?.data.plants ?? [];                          // list of plants or empty array while loading
+  const totalPages = data?.data.pagination.totalPages ?? 1;        // total pages for pagination
 
   return (
     <AdminLayout>
@@ -229,7 +231,7 @@ export default function AdminPlantsPage() {
                           <td className="px-4 py-3">
                             <span
                               className={`font-semibold ${
-                                plant.stock <= 5 ? 'text-red-600' : 'text-gray-800'
+                                plant.stock <= 5 ? 'text-red-600' : 'text-gray-800' // red when stock is low
                               }`}
                             >
                               {plant.stock}

@@ -6,23 +6,21 @@ import './index.css';
 import App from './App.tsx';
 import { store } from './store';
 
-// Create one shared React Query instance for the entire app
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // keep fetched data fresh for 5 minutes
-      retry: 1, // retry a failed request once before showing an error
+      staleTime: 1000 * 60 * 5, // treat fetched data as fresh for 5 minutes
+      retry: 1,                  // retry a failed request once before showing an error
     },
   },
 });
 
-// Find the empty <div id="root"> in index.html and hand it to React
 createRoot(document.getElementById('root')!).render(
-  // Runs components twice in development to catch bugs early (no effect in production)
+  // StrictMode renders components twice in development to surface bugs early
   <StrictMode>
-    {/* Makes Redux store (login state, user info) available to every component */}
+    {/* Provider makes the Redux store (auth state) available everywhere */}
     <Provider store={store}>
-      {/* Makes React Query cache (fetched plants, orders, etc.) available to every component */}
+      {/* QueryClientProvider makes the React Query cache available everywhere */}
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>

@@ -1,16 +1,16 @@
 interface Props {
-  open: boolean;
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-  isLoading?: boolean;
+  open: boolean;             // whether the modal is visible
+  title: string;             // heading shown at the top of the modal
+  onClose: () => void;       // called when user closes the modal
+  children: React.ReactNode; // content rendered inside the modal body
+  isLoading?: boolean;       // prevents closing while an API call is running
 }
 
 export default function AdminModal({ open, title, onClose, children, isLoading = false }: Props) {
-  if (!open) return null;
+  if (!open) return null; // don't render anything if modal is closed
 
   const handleClose = () => {
-    if (!isLoading) onClose();
+    if (!isLoading) onClose(); // block closing while loading
   };
 
   return (

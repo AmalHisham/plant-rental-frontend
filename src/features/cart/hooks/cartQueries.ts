@@ -6,16 +6,13 @@ import type { UpdateCartItemRequest } from '../types';
 export const CART_QUERY_KEY = 'cart';
 
 export const useCart = () => {
-  // Cart requires authentication — enabled: false skips the query for guests
-  // (avoids a 401 that would trigger the refresh/logout interceptor loop).
+  // Don't fetch for guests — would trigger a 401 and then an unnecessary token refresh
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   return useQuery({
     queryKey: [CART_QUERY_KEY],
     queryFn: getCart,
     enabled: isAuthenticated,
-    // 2-minute staleTime — cart data changes often (mutations invalidate immediately anyway),
-    // but a short window prevents unnecessary refetches on rapid tab switches.
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 60 * 2, // 2 minutes — mutations refresh the cache anyway
   });
 };
 
@@ -23,8 +20,7 @@ export const useAddToCart = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addToCart,
-    // onSettled fires after both success and error — ensures the cache is invalidated
-    // even if the mutation fails (e.g., stock ran out between button click and request).
+    // Refresh on both success and error so the cart is always up to date
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: [CART_QUERY_KEY] });
     },
@@ -34,7 +30,6 @@ export const useAddToCart = () => {
 export const useUpdateCartItem = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // Unwrap the compound arg so callers pass { plantId, data } as a single object.
     mutationFn: ({ plantId, data }: { plantId: string; data: UpdateCartItemRequest }) =>
       updateCartItem({ plantId, data }),
     onSettled: () => {

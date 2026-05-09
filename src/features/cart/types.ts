@@ -1,8 +1,6 @@
 export type CareLevel = 'easy' | 'medium' | 'hard';
 
-// CartPlant is the populated plant document embedded inside each cart item.
-// The backend populates plantId via Mongoose .populate() so the client gets the
-// full plant fields instead of a bare ObjectId.
+// Full plant info embedded in each cart item (the backend fills this in automatically)
 export interface CartPlant {
   _id: string;
   name: string;
@@ -12,17 +10,17 @@ export interface CartPlant {
   careLevel: CareLevel;
   images: string[];
   isAvailable: boolean;
-  stock: number;  // used on the cart page to cap the quantity stepper
+  stock: number;  // used to cap the quantity stepper on the cart page
 }
 
 export interface CartItem {
-  plantId: CartPlant;   // populated — not a bare id string
+  plantId: CartPlant;   // full plant object, not just an ID
   quantity: number;
   rentalStartDate: string;
   rentalEndDate: string;
-  rentalDays: number;   // computed by the backend from the date range; used to drive the stepper
+  rentalDays: number;   // calculated by the backend from the date range
   rentalTotal: number;  // pricePerDay × rentalDays × quantity
-  deposit: number;      // depositAmount × quantity (held separately, refunded on return)
+  deposit: number;      // depositAmount × quantity (refunded when the plant is returned)
   itemTotal: number;    // rentalTotal + deposit
 }
 
@@ -30,24 +28,24 @@ export interface Cart {
   _id?: string;
   userId: string;
   items: CartItem[];
-  cartTotal: number;  // sum of all itemTotals
+  cartTotal: number;  // sum of all item totals
 }
 
-// All cart API responses share this envelope shape.
+// Standard response envelope for all cart API calls
 export interface CartResponse {
   success: true;
   data: { cart: Cart };
 }
 
-// Request types document the exact JSON payloads sent to the backend.
+// What we send to the backend when adding a plant to the cart
 export interface AddToCartRequest {
   plantId: string;
   quantity: number;
-  rentalStartDate: string;  // ISO 8601 — backend validates and derives rentalDays
+  rentalStartDate: string;
   rentalEndDate: string;
 }
 
-// All fields optional — caller sends only what changed (partial update).
+// All fields are optional — only send what changed
 export interface UpdateCartItemRequest {
   quantity?: number;
   rentalStartDate?: string;

@@ -2,8 +2,7 @@ export type OrderStatus = 'booked' | 'delivered' | 'picked';
 export type DamageStatus = 'none' | 'minor' | 'major';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
 
-// Populated plant fields embedded inside an order item.
-// The backend populates plants.plantId via .populate() so we get full plant info.
+// Full plant info embedded in each order item (backend populates this automatically)
 export interface OrderPlant {
   _id: string;
   name: string;
@@ -14,7 +13,7 @@ export interface OrderPlant {
 }
 
 export interface OrderItem {
-  plantId: OrderPlant;   // populated
+  plantId: OrderPlant;   // full plant object, not just an ID
   quantity: number;
 }
 
@@ -38,11 +37,9 @@ export interface Order {
   updatedAt: string;
 }
 
-// ─── API response envelopes ────────────────────────────────────────────────────
-
 export interface OrdersResponse {
   success: true;
-  data: Order[];   // GET /api/orders → { success: true, data: orders[] }
+  data: Order[];
 }
 
 export interface OrderResponse {

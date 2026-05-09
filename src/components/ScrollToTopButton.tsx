@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
-// Appears in the bottom-right corner after the user scrolls past 400px.
-// Clicking it smoothly scrolls back to the top of the page.
+// Shows a button in the bottom-right corner after scrolling past 400px.
+// Clicking smoothly scrolls back to the top.
 export default function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
 

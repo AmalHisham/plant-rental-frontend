@@ -29,29 +29,31 @@ const formatCurrency = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 export default function AdminOrdersPage() {
   const role = useAppSelector((s) => s.auth.user?.role);
 
+  // permission flags based on role
   const canUpdateStatus = role === 'super_admin' || role === 'delivery_admin';
   const canUpdateDamage = role === 'super_admin' || role === 'order_admin';
   const canUpdateDeposit = role === 'super_admin' || role === 'order_admin';
 
   const [filters, setFilters] = useState<AdminOrdersFilters>({ page: 1, limit: 10 });
-  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null); // id of order currently being updated
 
   const { data, isLoading, isError } = useAdminOrders(filters);
   const { mutate: updateStatus } = useUpdateOrderStatus();
   const { mutate: updateDamage } = useUpdateOrderDamage();
   const { mutate: updateDeposit } = useUpdateOrderDeposit();
 
+  // update a single filter and reset to page 1
   const applyFilter = (key: keyof AdminOrdersFilters, value: string | number | undefined) => {
     setFilters((prev) => ({ ...prev, [key]: value || undefined, page: 1 }));
   };
 
-  const clearFilters = () => setFilters({ page: 1, limit: 10 });
+  const clearFilters = () => setFilters({ page: 1, limit: 10 }); // reset all filters
 
   const handleStatusChange = (order: AdminOrder, status: OrderStatus) => {
-    setPendingOrderId(order._id);
+    setPendingOrderId(order._id); // dim the row while updating
     updateStatus(
       { id: order._id, body: { status } },
-      { onSettled: () => setPendingOrderId(null) },
+      { onSettled: () => setPendingOrderId(null) }, // clear pending when done (success or error)
     );
   };
 
@@ -66,13 +68,13 @@ export default function AdminOrdersPage() {
   const handleDepositToggle = (order: AdminOrder) => {
     setPendingOrderId(order._id);
     updateDeposit(
-      { id: order._id, body: { depositRefunded: !order.depositRefunded } },
+      { id: order._id, body: { depositRefunded: !order.depositRefunded } }, // flip current value
       { onSettled: () => setPendingOrderId(null) },
     );
   };
 
-  const orders = data?.data.orders ?? [];
-  const totalPages = data?.data.totalPages ?? 1;
+  const orders = data?.data.orders ?? [];          // list of orders or empty array while loading
+  const totalPages = data?.data.totalPages ?? 1;   // total pages for pagination
 
   const selectClass =
     'text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -225,7 +227,7 @@ export default function AdminOrdersPage() {
                       </tr>
                     ) : (
                       orders.map((order) => {
-                        const isPending = pendingOrderId === order._id;
+                        const isPending = pendingOrderId === order._id; // true while this row is being updated
                         return (
                           <tr
                             key={order._id}

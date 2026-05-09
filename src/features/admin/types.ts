@@ -222,7 +222,7 @@ export interface ToggleUserStatusRequest {
 export interface CreateAdminRequest {
   name: string;
   email: string;
-  role: Exclude<UserRole, 'user'>;
+  role: Exclude<UserRole, 'user'>; // any role except regular user
 }
 
 // ─── Shared ───────────────────────────────────────────────────────────────────

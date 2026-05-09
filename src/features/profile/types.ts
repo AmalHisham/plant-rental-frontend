@@ -1,6 +1,6 @@
 import type { AuthUser } from '../auth/types';
 
-// Full profile shape returned by GET /api/profile — extends AuthUser with server-only fields.
+// Full user profile from the server — adds extra fields not in the login response
 export interface ProfileUser extends AuthUser {
   policyAccepted: boolean;
   isActive: boolean;
@@ -25,7 +25,7 @@ export interface Address {
   updatedAt: string;
 }
 
-// ─── API response envelopes ───────────────────────────────────────────────────
+// ─── Response types ───────────────────────────────────────────────────────────
 
 export interface ProfileResponse {
   success: true;
@@ -47,7 +47,7 @@ export interface MessageResponse {
   message: string;
 }
 
-// ─── Request payload types ────────────────────────────────────────────────────
+// ─── Request types ────────────────────────────────────────────────────────────
 
 export interface UpdateProfileRequest {
   name?: string;

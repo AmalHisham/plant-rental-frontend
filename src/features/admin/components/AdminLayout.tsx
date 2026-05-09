@@ -41,6 +41,15 @@ function UsersIcon() {
   );
 }
 
+function KeyIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M15 7a4 4 0 11-8 0 4 4 0 018 0zM7 11v10m4-6H3" />
+    </svg>
+  );
+}
+
 function ArrowLeftIcon() {
   return (
     <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -61,17 +70,18 @@ function LogoutIcon() {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface SidebarLink {
-  to: string;
-  label: string;
-  icon: React.ReactNode;
-  visible: boolean;
-  end?: boolean;
+  to: string;            // route path
+  label: string;         // display text in sidebar
+  icon: React.ReactNode; // icon shown next to label
+  visible: boolean;      // whether this link is shown for the current role
+  end?: boolean;         // exact match for active state (used for /admin root)
 }
 
 interface Props {
-  children: React.ReactNode;
+  children: React.ReactNode; // page content rendered to the right of the sidebar
 }
 
+// human-readable labels for each role shown in the sidebar
 const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
   product_admin: 'Product Admin',
@@ -84,22 +94,23 @@ const ROLE_LABELS: Record<UserRole, string> = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdminLayout({ children }: Props) {
-  const user = useAppSelector((s) => s.auth.user);
+  const user = useAppSelector((s) => s.auth.user); // logged-in admin from Redux store
   const role = user?.role;
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
+    dispatch(logout());  // clear auth state
+    navigate('/');       // redirect to homepage
   };
 
+  // each link is only visible to roles that have access to that section
   const links: SidebarLink[] = [
     {
       to: '/admin',
       label: 'Dashboard',
       icon: <DashboardIcon />,
-      visible: role === 'super_admin',
+      visible: role === 'super_admin', // only super_admin sees dashboard
       end: true,
     },
     {
@@ -123,7 +134,7 @@ export default function AdminLayout({ children }: Props) {
     },
   ];
 
-  const visibleLinks = links.filter((l) => l.visible);
+  const visibleLinks = links.filter((l) => l.visible); // remove links the current role can't access
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -176,6 +187,19 @@ export default function AdminLayout({ children }: Props) {
 
         {/* Footer */}
         <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+          <NavLink
+            to="/admin/profile"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive
+                  ? 'bg-green-900/40 text-green-400'
+                  : 'text-gray-500 hover:bg-gray-800 hover:text-gray-300'
+              }`
+            }
+          >
+            <KeyIcon />
+            Change Password
+          </NavLink>
           <Link
             to="/"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors"

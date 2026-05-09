@@ -5,41 +5,41 @@ import { useUploadPlantImages, useDeletePlantImage } from '../hooks/adminQueries
 import type { Plant } from '../../plants/types';
 
 interface Props {
-  plant: Plant;
-  onClose: () => void;
+  plant: Plant;        // the plant whose images are being managed
+  onClose: () => void; // called when modal is closed
 }
 
 export default function PlantImagesModal({ plant, onClose }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [confirmUrl, setConfirmUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);          // lets us open file picker on click
+  const [dragOver, setDragOver] = useState(false);              // true when user drags a file over the upload zone
+  const [confirmUrl, setConfirmUrl] = useState<string | null>(null); // URL of image pending deletion
 
   const { mutate: upload, isPending: uploading } = useUploadPlantImages();
   const { mutate: removeImage, isPending: removingImage } = useDeletePlantImage();
 
-  const isBusy = uploading || removingImage;
+  const isBusy = uploading || removingImage; // true while any upload or delete is in progress
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const arr = Array.from(files);
-    upload({ id: plant._id, files: arr });
+    upload({ id: plant._id, files: arr }); // upload all picked files
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
-    handleFiles(e.dataTransfer.files);
+    handleFiles(e.dataTransfer.files); // pass dropped files to upload handler
   };
 
   const handleConfirmDelete = () => {
     if (!confirmUrl) return;
     removeImage(
       { id: plant._id, imageUrl: confirmUrl },
-      { onSuccess: () => setConfirmUrl(null) },
+      { onSuccess: () => setConfirmUrl(null) }, // clear confirm state after deletion
     );
   };
 
-  // Backend caps at 10; show how many slots remain
+  // max 10 images allowed — show how many more can be added
   const remaining = 10 - plant.images.length;
 
   return (

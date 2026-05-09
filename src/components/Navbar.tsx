@@ -6,7 +6,7 @@ import { useWishlist } from '../features/wishlist/hooks/wishlistQueries';
 import { useCart } from '../features/cart/hooks/cartQueries';
 import type { UserRole } from '../features/auth/types';
 
-// Set for O(1) admin-role lookup — used both in the desktop and mobile menus.
+// Used to check if the logged-in user is an admin
 const ADMIN_ROLES = new Set<UserRole>([
   'super_admin',
   'product_admin',
@@ -15,9 +15,7 @@ const ADMIN_ROLES = new Set<UserRole>([
   'user_admin',
 ]);
 
-// ─── Inline SVG icons ──────────────────────────────────────────────────────────
-// Kept as small components (not imported from an icon library) to avoid a dependency
-// and to keep the SVG paths readable alongside the code that uses them.
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 function CartIcon() {
   return (
@@ -60,8 +58,7 @@ function ChevronDownIcon() {
 }
 
 // ─── IconButton ───────────────────────────────────────────────────────────────
-// Reusable icon link with an optional count badge (e.g. cart items, wishlist items).
-// badge > 99 shows '99+' to prevent the badge from overflowing its container.
+// A link with an icon and an optional count badge. Shows '99+' if the count is too large.
 
 interface IconButtonProps {
   to: string;
@@ -100,36 +97,32 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const location = useLocation();
 
-  // Wishlist and cart counts come from React Query — they stay in sync with the server
-  // cache without needing Redux. ?? 0 handles the loading state (undefined).
+  // ?? 0 handles the undefined loading state before data arrives
   const { data: wishlistData } = useWishlist();
   const wishlistCount = wishlistData?.data.wishlist.plants.length ?? 0;
 
   const { data: cartData } = useCart();
   const cartCount = cartData?.data.cart.items.length ?? 0;
 
-  // isOnLanding controls whether the "How It Works" anchor link is shown.
   const isOnLanding = location.pathname === '/';
   const isAdmin = user?.role != null && ADMIN_ROLES.has(user.role);
 
-  // User initials for the avatar — max 2 characters (first letter of each name part).
+  // First letter of each word in the name, up to 2 characters
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
     : '';
 
   const closeMenu = () => setMenuOpen(false);
 
-  // Scroll listener adds a shadow to the navbar once the page is scrolled past 0px.
-  // passive: true tells the browser this listener never calls preventDefault(), allowing
-  // it to run scroll handling on a separate thread for better performance.
+  // Add a shadow to the navbar once the user scrolls down
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 0);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close the profile dropdown when the user clicks outside the profileRef container.
-  // Uses mousedown (not click) so the dropdown closes before any click inside it fires.
+  // Close the profile dropdown when clicking anywhere outside it.
+  // mousedown fires before click, so the dropdown is gone before any inner click handlers run.
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -155,7 +148,7 @@ export default function Navbar() {
             <span>LeafRent</span>
           </Link>
 
-          {/* Desktop centre navigation links */}
+          {/* Desktop centre links */}
           <div className="hidden md:flex items-center gap-8">
             <NavLink
               to="/plants"
@@ -165,7 +158,7 @@ export default function Navbar() {
             >
               Browse Plants
             </NavLink>
-            {/* "How It Works" is an in-page anchor, shown only on the landing page */}
+            {/* In-page anchor — only shown on the landing page */}
             {isOnLanding && (
               <a
                 href="#how-it-works"
@@ -186,9 +179,9 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Desktop right: wishlist, cart, user menu */}
+          {/* Desktop right side: wishlist, cart, user menu */}
           <div className="hidden md:flex items-center gap-1">
-            {/* Wishlist and cart icons are hidden for admins — they are customer-only features */}
+            {/* Wishlist and cart are customer-only — hidden for admin users */}
             {isAuthenticated && !isAdmin && (
               <IconButton to="/wishlist" label="Wishlist" badge={wishlistCount}>
                 <HeartIcon />
@@ -274,7 +267,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile hamburger — hidden on md+ screens */}
+          {/* Hamburger button — only visible on mobile */}
           <button
             className="md:hidden p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
             onClick={() => setMenuOpen((v) => !v)}
@@ -285,7 +278,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile drawer — rendered below the navbar bar when menuOpen is true */}
+      {/* Mobile menu — shown below the navbar when the hamburger is open */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 py-5 flex flex-col gap-4">
           <NavLink
