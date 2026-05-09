@@ -39,9 +39,9 @@ export default function AdminPlantsPage() {
   const { mutate: update, isPending: updating } = useUpdatePlant();
   const { mutate: remove, isPending: deleting } = useDeletePlant();
   const { mutate: uploadImages, isPending: uploading } = useUploadPlantImages();
-  const { mutate: deleteImage } = useDeletePlantImage();
+  const { mutate: deleteImage, isPending: deletingImage } = useDeletePlantImage();
 
-  const isMutating = creating || updating || uploading; // true while any write operation is in progress
+  const isMutating = creating || updating || uploading || deletingImage; // true while any write operation is in progress
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -101,7 +101,10 @@ export default function AdminPlantsPage() {
 
   const handleDeleteImage = (url: string) => {
     if (!editingPlant) return;
-    deleteImage({ id: editingPlant._id, imageUrl: url }); // delete specific image by URL
+    deleteImage(
+      { id: editingPlant._id, imageUrl: url },
+      { onSuccess: (res) => setEditingPlant(res.data) }, // keep editingPlant in sync so stale image doesn't reappear
+    );
   };
 
   const handleAvailabilityToggle = (plant: Plant) => {
