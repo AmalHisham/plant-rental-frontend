@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import PasswordInput from '../../../components/PasswordInput';
 import { useChangePassword } from '../hooks/profileQueries';
+
+interface FormValues {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
 
 const getApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -11,45 +17,26 @@ const getApiError = (error: unknown): string => {
 };
 
 export default function ChangePasswordSection() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [clientError, setClientError] = useState('');
-  const [apiError, setApiError] = useState('');
-  const [success, setSuccess] = useState(false);
-
   const mutation = useChangePassword();
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setClientError('');
-    setApiError('');
-    setSuccess(false);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    setError,
+    formState: { errors, isSubmitSuccessful },
+  } = useForm<FormValues>();
 
-    if (newPassword !== confirmPassword) {
-      setClientError('New passwords do not match');
-      return;
-    }
-    if (newPassword.length < 8) {
-      setClientError('New password must be at least 8 characters');
-      return;
-    }
-
+  const onSubmit = (data: FormValues) => {
     mutation.mutate(
-      { currentPassword, newPassword },
+      { currentPassword: data.currentPassword, newPassword: data.newPassword },
       {
-        onSuccess: () => {
-          setSuccess(true);
-          setCurrentPassword('');
-          setNewPassword('');
-          setConfirmPassword('');
-        },
-        onError: (err) => setApiError(getApiError(err)),
+        onSuccess: () => reset(),
+        onError: (err) => setError('root', { message: getApiError(err) }),
       }
     );
   };
-
-  const error = clientError || apiError;
 
   return (
     <section id="change-password" className="scroll-mt-20">
@@ -58,17 +45,19 @@ export default function ChangePasswordSection() {
         Leave unchanged if you signed in with Google.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
         <div>
           <label htmlFor="current-password" className="block text-xs font-medium text-gray-600 mb-1">
             Current Password
           </label>
           <PasswordInput
             id="current-password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Enter current password"
+            {...register('currentPassword', { required: 'Current password is required' })}
           />
+          {errors.currentPassword && (
+            <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>
+          )}
         </div>
 
         <div>
@@ -77,10 +66,15 @@ export default function ChangePasswordSection() {
           </label>
           <PasswordInput
             id="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Minimum 8 characters"
+            {...register('newPassword', {
+              required: 'New password is required',
+              minLength: { value: 8, message: 'New password must be at least 8 characters' },
+            })}
           />
+          {errors.newPassword && (
+            <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>
+          )}
         </div>
 
         <div>
@@ -89,20 +83,25 @@ export default function ChangePasswordSection() {
           </label>
           <PasswordInput
             id="confirm-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Re-enter new password"
-            hasError={!!clientError && clientError.includes('match')}
+            hasError={!!errors.confirmPassword}
+            {...register('confirmPassword', {
+              required: 'Please confirm your new password',
+              validate: (val) => val === watch('newPassword') || 'Passwords do not match',
+            })}
           />
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
+          )}
         </div>
 
-        {error && (
+        {errors.root && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            {error}
+            {errors.root.message}
           </p>
         )}
 
-        {success && (
+        {isSubmitSuccessful && mutation.isSuccess && (
           <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
             Password changed successfully.
           </p>

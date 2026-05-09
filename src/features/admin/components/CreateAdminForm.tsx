@@ -1,14 +1,21 @@
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import type { CreateAdminRequest } from '../types';
 import type { UserRole } from '../../auth/types';
 
 interface Props {
-  onSubmit: (data: CreateAdminRequest) => void;
-  isLoading: boolean;
+  onSubmit: (data: CreateAdminRequest) => void; // called with form data when user submits
+  isLoading: boolean; // disables submit button while API call is in progress
 }
 
 type AdminRole = Exclude<UserRole, 'user'>;
 
+interface FormValues {
+  name: string;
+  email: string;
+  role: AdminRole;
+}
+
+// value → sent to backend, label → shown to user in dropdown
 const ADMIN_ROLES: { value: AdminRole; label: string }[] = [
   { value: 'super_admin', label: 'Super Admin' },
   { value: 'product_admin', label: 'Product Admin' },
@@ -18,61 +25,50 @@ const ADMIN_ROLES: { value: AdminRole; label: string }[] = [
 ];
 
 export default function CreateAdminForm({ onSubmit, isLoading }: Props) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState<AdminRole>('product_admin');
-  const [error, setError] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({ defaultValues: { role: 'product_admin' } });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!name.trim()) return setError('Name is required.');
-    if (!email.trim() || !email.includes('@')) return setError('A valid email is required.');
-
-    onSubmit({ name: name.trim(), email: email.trim().toLowerCase(), role });
+  const onFormSubmit = (data: FormValues) => {
+    onSubmit({ name: data.name.trim(), email: data.email.trim().toLowerCase(), role: data.role });
   };
 
+  // shared Tailwind classes to avoid repeating on every input/label
   const inputClass =
     'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400';
   const labelClass = 'block text-xs font-semibold text-gray-600 mb-1';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
-
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div>
         <label className={labelClass}>Name *</label>
         <input
-          className={inputClass}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          className={`${inputClass} ${errors.name ? 'border-red-400' : ''}`}
           placeholder="John Doe"
+          {...register('name', { required: 'Name is required' })}
         />
+        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
         <label className={labelClass}>Email *</label>
         <input
           type="email"
-          className={inputClass}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          className={`${inputClass} ${errors.email ? 'border-red-400' : ''}`}
           placeholder="admin@example.com"
+          {...register('email', {
+            required: 'Email is required',
+            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' },
+          })}
         />
+        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
       </div>
 
       <div>
         <label className={labelClass}>Role</label>
-        <select
-          className={inputClass}
-          value={role}
-          onChange={(e) => setRole(e.target.value as AdminRole)}
-        >
+        <select className={inputClass} {...register('role')}>
           {ADMIN_ROLES.map((r) => (
             <option key={r.value} value={r.value}>
               {r.label}

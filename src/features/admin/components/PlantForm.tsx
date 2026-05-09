@@ -1,40 +1,62 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import type { Plant } from '../../plants/types';
 import type { CreatePlantRequest } from '../types';
 
 interface Props {
-  initialValues?: Plant;
-  onSubmit: (data: CreatePlantRequest, newFiles: File[]) => void;
-  onDeleteImage?: (url: string) => void;
-  isLoading: boolean;
+  initialValues?: Plant;                                             // existing plant data — passed in edit mode, omitted in create mode
+  onSubmit: (data: CreatePlantRequest, newFiles: File[]) => void;   // called with form fields + newly picked images on submit
+  onDeleteImage?: (url: string) => void;                            // called with image URL when user removes an existing image
+  isLoading: boolean;                                               // disables submit button and shows spinner while API call runs
+}
+
+interface FormValues {
+  name: string;
+  category: string;
+  description: string;
+  pricePerDay: number;
+  depositAmount: number;
+  stock: number;
+  careLevel: 'easy' | 'medium' | 'hard';
+  isAvailable: boolean;
 }
 
 const CARE_LEVELS = ['easy', 'medium', 'hard'] as const;
 
 export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLoading }: Props) {
-  const [name, setName] = useState(initialValues?.name ?? '');
-  const [category, setCategory] = useState(initialValues?.category ?? '');
-  const [description, setDescription] = useState(initialValues?.description ?? '');
-  const [pricePerDay, setPricePerDay] = useState(String(initialValues?.pricePerDay ?? ''));
-  const [depositAmount, setDepositAmount] = useState(String(initialValues?.depositAmount ?? ''));
-  const [stock, setStock] = useState(String(initialValues?.stock ?? ''));
-  const [careLevel, setCareLevel] = useState<'easy' | 'medium' | 'hard'>(
-    initialValues?.careLevel ?? 'easy',
-  );
-  const [isAvailable, setIsAvailable] = useState(initialValues?.isAvailable ?? true);
-  const [error, setError] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      name: initialValues?.name ?? '',
+      category: initialValues?.category ?? '',
+      description: initialValues?.description ?? '',
+      pricePerDay: initialValues?.pricePerDay ?? 0,
+      depositAmount: initialValues?.depositAmount ?? 0,
+      stock: initialValues?.stock ?? 0,
+      careLevel: initialValues?.careLevel ?? 'easy',
+      isAvailable: initialValues?.isAvailable ?? true,
+    },
+  });
 
   // New images picked locally (not yet uploaded)
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [dragOver, setDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false); // turns true when user drags a file over the upload area
+  const fileInputRef = useRef<HTMLInputElement>(null); // lets us open the file picker when user clicks the upload area
 
-  const existingImages = initialValues?.images ?? [];
-  const totalCount = existingImages.length + newFiles.length;
+  // Re-seed file state when switching between plants in edit mode
+  useEffect(() => {
+    setNewFiles([]);
+  }, [initialValues?._id]);
+
+  const existingImages = initialValues?.images ?? []; // already uploaded images (empty in create mode)
+  const totalCount = existingImages.length + newFiles.length; // total image count (max 10)
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
-    const slots = 10 - existingImages.length - newFiles.length;
+    const slots = 10 - existingImages.length - newFiles.length; // how many more images can be added
     if (slots <= 0) return;
     const picked = Array.from(fileList).slice(0, slots);
     setNewFiles((prev) => [...prev, ...picked]);
@@ -44,29 +66,18 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
     setNewFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!name.trim()) return setError('Name is required.');
-    if (!category.trim()) return setError('Category is required.');
-    if (!description.trim()) return setError('Description is required.');
-    if (Number(pricePerDay) < 0) return setError('Price per day must be 0 or more.');
-    if (Number(depositAmount) < 0) return setError('Deposit amount must be 0 or more.');
-    if (!Number.isInteger(Number(stock)) || Number(stock) < 0)
-      return setError('Stock must be a non-negative whole number.');
-
+  const onFormSubmit = (data: FormValues) => {
     onSubmit(
       {
-        name: name.trim(),
-        category: category.trim(),
-        description: description.trim(),
-        pricePerDay: Number(pricePerDay),
-        depositAmount: Number(depositAmount),
-        stock: Number(stock),
-        careLevel,
-        images: existingImages,
-        isAvailable,
+        name: data.name.trim(),
+        category: data.category.trim(),
+        description: data.description.trim(),
+        pricePerDay: Number(data.pricePerDay),
+        depositAmount: Number(data.depositAmount),
+        stock: Number(data.stock),
+        careLevel: data.careLevel,
+        images: existingImages, // keep existing images as-is
+        isAvailable: data.isAvailable,
       },
       newFiles,
     );
@@ -77,43 +88,39 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
   const labelClass = 'block text-xs font-semibold text-gray-600 mb-1';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
-
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Name *</label>
           <input
-            className={inputClass}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            className={`${inputClass} ${errors.name ? 'border-red-400' : ''}`}
             placeholder="Monstera Deliciosa"
+            {...register('name', { required: 'Name is required' })}
           />
+          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
         </div>
         <div>
           <label className={labelClass}>Category *</label>
           <input
-            className={inputClass}
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            className={`${inputClass} ${errors.category ? 'border-red-400' : ''}`}
             placeholder="Tropical"
+            {...register('category', { required: 'Category is required' })}
           />
+          {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category.message}</p>}
         </div>
       </div>
 
       <div>
         <label className={labelClass}>Description *</label>
         <textarea
-          className={inputClass}
+          className={`${inputClass} ${errors.description ? 'border-red-400' : ''}`}
           rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
           placeholder="A beautiful tropical plant..."
+          {...register('description', { required: 'Description is required' })}
         />
+        {errors.description && (
+          <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -123,11 +130,17 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
             type="number"
             min="0"
             step="0.01"
-            className={inputClass}
-            value={pricePerDay}
-            onChange={(e) => setPricePerDay(e.target.value)}
+            className={`${inputClass} ${errors.pricePerDay ? 'border-red-400' : ''}`}
             placeholder="50"
+            {...register('pricePerDay', {
+              required: 'Price is required',
+              min: { value: 0, message: 'Price must be 0 or more' },
+              valueAsNumber: true,
+            })}
           />
+          {errors.pricePerDay && (
+            <p className="text-red-500 text-xs mt-1">{errors.pricePerDay.message}</p>
+          )}
         </div>
         <div>
           <label className={labelClass}>Deposit (₹) *</label>
@@ -135,11 +148,17 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
             type="number"
             min="0"
             step="0.01"
-            className={inputClass}
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(e.target.value)}
+            className={`${inputClass} ${errors.depositAmount ? 'border-red-400' : ''}`}
             placeholder="200"
+            {...register('depositAmount', {
+              required: 'Deposit is required',
+              min: { value: 0, message: 'Deposit must be 0 or more' },
+              valueAsNumber: true,
+            })}
           />
+          {errors.depositAmount && (
+            <p className="text-red-500 text-xs mt-1">{errors.depositAmount.message}</p>
+          )}
         </div>
         <div>
           <label className={labelClass}>Stock *</label>
@@ -147,22 +166,23 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
             type="number"
             min="0"
             step="1"
-            className={inputClass}
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
+            className={`${inputClass} ${errors.stock ? 'border-red-400' : ''}`}
             placeholder="10"
+            {...register('stock', {
+              required: 'Stock is required',
+              min: { value: 0, message: 'Stock must be 0 or more' },
+              validate: (v) => Number.isInteger(Number(v)) || 'Stock must be a whole number',
+              valueAsNumber: true,
+            })}
           />
+          {errors.stock && <p className="text-red-500 text-xs mt-1">{errors.stock.message}</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Care Level</label>
-          <select
-            className={inputClass}
-            value={careLevel}
-            onChange={(e) => setCareLevel(e.target.value as typeof careLevel)}
-          >
+          <select className={inputClass} {...register('careLevel')}>
             {CARE_LEVELS.map((l) => (
               <option key={l} value={l}>
                 {l.charAt(0).toUpperCase() + l.slice(1)}
@@ -174,8 +194,7 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.checked)}
+              {...register('isAvailable')}
               className="w-4 h-4 accent-green-600"
             />
             <span className="text-sm font-medium text-gray-700">Available for rental</span>

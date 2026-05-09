@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useAppSelector } from '../../../store';
 import { useProfile, useUpdateProfile } from '../hooks/profileQueries';
+
+interface FormValues {
+  name: string;
+  phone: string;
+}
 
 const getApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -15,39 +21,45 @@ export default function ProfileInfoSection() {
   const { data } = useProfile();
   const mutation = useUpdateProfile();
 
-  // Seed form from Redux immediately (no loading flicker), then update when query resolves.
-  const [name, setName] = useState(reduxUser?.name ?? '');
-  const [phone, setPhone] = useState(reduxUser?.phone ?? '');
-  const [apiError, setApiError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    if (data) {
-      setName(data.data.user.name);
-      setPhone(data.data.user.phone ?? '');
-    }
-  }, [data]);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useForm<FormValues>({
+    // Seed form from Redux immediately (no loading flicker)
+    defaultValues: { name: reduxUser?.name ?? '', phone: reduxUser?.phone ?? '' },
+  });
 
   const profileUser = data?.data.user;
   const email = profileUser?.email ?? reduxUser?.email ?? '';
   const role = profileUser?.role ?? reduxUser?.role ?? 'user';
 
+  // Update form values when query resolves with fresh server data
+  useEffect(() => {
+    if (profileUser) {
+      reset({ name: profileUser.name, phone: profileUser.phone ?? '' });
+    }
+  }, [profileUser, reset]);
+
   const originalName = profileUser?.name ?? reduxUser?.name ?? '';
   const originalPhone = profileUser?.phone ?? reduxUser?.phone ?? '';
-  const hasChanges = name.trim() !== originalName || phone.trim() !== originalPhone;
+  const currentName = watch('name');
+  const currentPhone = watch('phone');
+  const hasChanges =
+    currentName.trim() !== originalName || currentPhone.trim() !== originalPhone;
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setApiError('');
-    setSuccess(false);
-
+  const onSubmit = (data: FormValues) => {
+    clearErrors();
     const payload: { name?: string; phone?: string } = {};
-    if (name.trim() !== originalName) payload.name = name.trim();
-    if (phone.trim() !== originalPhone) payload.phone = phone.trim() || undefined;
+    if (data.name.trim() !== originalName) payload.name = data.name.trim();
+    if (data.phone.trim() !== originalPhone) payload.phone = data.phone.trim() || undefined;
 
     mutation.mutate(payload, {
-      onSuccess: () => setSuccess(true),
-      onError: (err) => setApiError(getApiError(err)),
+      onError: (err) => setError('root', { message: getApiError(err) }),
     });
   };
 
@@ -79,7 +91,7 @@ export default function ProfileInfoSection() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
         <div>
           <label htmlFor="profile-name" className="block text-xs font-medium text-gray-600 mb-1">
             Full Name
@@ -87,14 +99,15 @@ export default function ProfileInfoSection() {
           <input
             id="profile-name"
             type="text"
-            value={name}
-            onChange={(e) => { setName(e.target.value); setSuccess(false); }}
             placeholder="Your name"
-            required
-            minLength={2}
-            maxLength={50}
+            {...register('name', {
+              required: 'Name is required',
+              minLength: { value: 2, message: 'Name must be at least 2 characters' },
+              maxLength: { value: 50, message: 'Name must be at most 50 characters' },
+            })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
           />
+          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
         </div>
 
         <div>
@@ -104,25 +117,23 @@ export default function ProfileInfoSection() {
           <input
             id="profile-phone"
             type="tel"
-            value={phone}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-              setPhone(digits);
-              setSuccess(false);
-            }}
             placeholder="e.g. 9876543210"
+            {...register('phone', {
+              // Strip non-digits and cap at 10 on change via setValueAs
+              setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 10),
+            })}
             maxLength={10}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
           />
         </div>
 
-        {apiError && (
+        {errors.root && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            {apiError}
+            {errors.root.message}
           </p>
         )}
 
-        {success && (
+        {isSubmitSuccessful && !errors.root && mutation.isSuccess && (
           <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
             Profile updated successfully.
           </p>
@@ -130,7 +141,7 @@ export default function ProfileInfoSection() {
 
         <button
           type="submit"
-          disabled={mutation.isPending || !hasChanges}
+          disabled={isSubmitting || mutation.isPending || !hasChanges}
           className="bg-green-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-green-700 transition disabled:opacity-60"
         >
           {mutation.isPending ? 'Saving…' : 'Save Changes'}

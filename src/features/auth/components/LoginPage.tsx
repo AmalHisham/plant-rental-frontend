@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../../store';
 import { setCredentials, setError } from '../authSlice';
@@ -6,9 +7,9 @@ import { loginApi } from '../utils/authApi';
 import PasswordInput from '../../../components/PasswordInput';
 import BackButton from '../../../components/BackButton';
 
-interface FormErrors {
-  email?: string;
-  password?: string;
+interface FormValues {
+  email: string;
+  password: string;
 }
 
 // GOOGLE_AUTH_URL points to the backend's OAuth redirect entry point.
@@ -16,49 +17,21 @@ interface FormErrors {
 // uses a browser redirect flow — it cannot be triggered by an XHR request.
 const GOOGLE_AUTH_URL = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000'}/api/auth/google`;
 
-// Client-side validation mirrors the backend's minimum rules to give
-// instant feedback before a round-trip is made to the API.
-function validate(email: string, password: string): FormErrors {
-  const errors: FormErrors = {};
-  if (!email) {
-    errors.email = 'Email is required';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = 'Enter a valid email address';
-  }
-  if (!password) {
-    errors.password = 'Password is required';
-  } else if (password.length < 8) {
-    errors.password = 'Password must be at least 8 characters';
-  }
-  return errors;
-}
-
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
-  // apiError is kept separate from fieldErrors so it appears as a banner,
-  // not inline next to a specific field.
   const [apiError, setApiError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>();
+
+  const onSubmit = async (data: FormValues) => {
     setApiError('');
-
-    const errors = validate(email, password);
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      return;
-    }
-    setFieldErrors({});
-    setLoading(true);
-
     try {
-      const res = await loginApi({ email, password });
+      const res = await loginApi(data);
       // setCredentials writes tokens + user to both Redux state and localStorage.
       dispatch(setCredentials(res.data));
       const role = res.data.user.role;
@@ -70,8 +43,6 @@ export default function LoginPage() {
         'Login failed. Please try again.';
       setApiError(msg);
       dispatch(setError(msg));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -106,17 +77,19 @@ export default function LoginPage() {
         </div>
 
         {/* noValidate disables native browser validation so we can show our own error UI */}
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
+              {...register('email', {
+                required: 'Email is required',
+                pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' },
+              })}
+              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition ${errors.email ? 'border-red-400' : 'border-gray-300'}`}
             />
-            {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
           </div>
 
           <div>
@@ -127,11 +100,14 @@ export default function LoginPage() {
               </Link>
             </div>
             <PasswordInput
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              hasError={!!fieldErrors.password}
+              placeholder="••••••••"
+              hasError={!!errors.password}
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 8, message: 'Password must be at least 8 characters' },
+              })}
             />
-            {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
 
           {apiError && (
@@ -142,16 +118,16 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl py-2.5 text-sm transition flex items-center justify-center gap-2"
           >
-            {loading && (
+            {isSubmitting && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             )}
-            {loading ? 'Signing in…' : 'Sign in'}
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 

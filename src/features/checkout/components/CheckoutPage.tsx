@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -57,6 +58,13 @@ function CheckoutSkeleton() {
   );
 }
 
+// ─── Form values ──────────────────────────────────────────────────────────────
+
+interface CheckoutFormValues {
+  manualAddress: string;
+  policyChecked: boolean;
+}
+
 // ─── CheckoutPage ─────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
@@ -76,13 +84,18 @@ export default function CheckoutPage() {
   // ── UI state ──
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [useManualAddress, setUseManualAddress] = useState(false);
-  const [manualAddress, setManualAddress] = useState('');
-  const [policyChecked, setPolicyChecked] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
 
   const addresses = addressesData?.data.addresses.filter((a) => !a.isDeleted) ?? [];
   const policyAlreadyAccepted = profileData?.data.user.policyAccepted ?? false;
+
+  const { register, watch, setValue } = useForm<CheckoutFormValues>({
+    defaultValues: { manualAddress: '', policyChecked: false },
+  });
+
+  const manualAddress = watch('manualAddress');
+  const policyChecked = watch('policyChecked');
 
   // Auto-select the default address once addresses load.
   useEffect(() => {
@@ -96,8 +109,8 @@ export default function CheckoutPage() {
 
   // If policy is already accepted on the account, pre-tick the checkbox.
   useEffect(() => {
-    if (policyAlreadyAccepted) setPolicyChecked(true);
-  }, [policyAlreadyAccepted]);
+    if (policyAlreadyAccepted) setValue('policyChecked', true);
+  }, [policyAlreadyAccepted, setValue]);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ visible: true, message, type });
@@ -253,9 +266,9 @@ export default function CheckoutPage() {
     );
   }
 
-  const rentalSubtotal = items.reduce((sum, item) => sum + item.rentalTotal, 0);
-  const totalDeposit = items.reduce((sum, item) => sum + item.deposit, 0);
-  const grandTotal = cart?.cartTotal ?? 0;
+  const rentalSubtotal = items.reduce((sum, item) => sum + item.rentalTotal, 0); // sum of all rental costs
+  const totalDeposit = items.reduce((sum, item) => sum + item.deposit, 0); // sum of all refundable deposits
+  const grandTotal = cart?.cartTotal ?? 0; // rental + deposit combined
 
   return (
     <>
@@ -340,13 +353,12 @@ export default function CheckoutPage() {
                       </button>
                     )}
 
-                    {/* Manual text entry */}
+                    {/* Manual text entry — registered with RHF */}
                     {useManualAddress && (
                       <textarea
-                        value={manualAddress}
-                        onChange={(e) => setManualAddress(e.target.value)}
                         placeholder="Enter your full delivery address (house no., street, city, state, pincode)"
                         rows={3}
+                        {...register('manualAddress')}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                       />
                     )}
@@ -385,8 +397,7 @@ export default function CheckoutPage() {
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={policyChecked}
-                        onChange={(e) => setPolicyChecked(e.target.checked)}
+                        {...register('policyChecked')}
                         className="mt-0.5 w-4 h-4 accent-green-600 cursor-pointer"
                       />
                       <span className="text-sm text-gray-700">

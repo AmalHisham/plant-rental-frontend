@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useAddAddress, useUpdateAddress } from '../hooks/profileQueries';
-import type { Address, CreateAddressRequest } from '../types';
+import type { Address } from '../types';
 
 interface AddressFormModalProps {
   isOpen: boolean;
@@ -9,17 +10,17 @@ interface AddressFormModalProps {
   initialData?: Address;
 }
 
-const EMPTY_FORM: CreateAddressRequest = {
-  label: '',
-  recipientName: '',
-  phone: '',
-  addressLine1: '',
-  addressLine2: '',
-  city: '',
-  state: '',
-  pincode: '',
-  isDefault: false,
-};
+interface FormValues {
+  label: string;
+  recipientName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+}
 
 const getApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -29,20 +30,36 @@ const getApiError = (error: unknown): string => {
 };
 
 export default function AddressFormModal({ isOpen, onClose, initialData }: AddressFormModalProps) {
-  const [form, setForm] = useState<CreateAddressRequest>(EMPTY_FORM);
-  const [apiError, setApiError] = useState('');
-
   const addMutation = useAddAddress();
   const updateMutation = useUpdateAddress();
 
   const isEditing = !!initialData;
   const isPending = addMutation.isPending || updateMutation.isPending;
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      label: '',
+      recipientName: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      pincode: '',
+      isDefault: false,
+    },
+  });
+
   // Populate form when opening in edit mode, reset when opening in create mode.
   useEffect(() => {
     if (isOpen) {
-      setApiError('');
-      setForm(
+      reset(
         initialData
           ? {
               label: initialData.label,
@@ -55,33 +72,35 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               pincode: initialData.pincode,
               isDefault: initialData.isDefault,
             }
-          : EMPTY_FORM
+          : {
+              label: '',
+              recipientName: '',
+              phone: '',
+              addressLine1: '',
+              addressLine2: '',
+              city: '',
+              state: '',
+              pincode: '',
+              isDefault: false,
+            }
       );
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, reset]);
 
-  const set = (field: keyof CreateAddressRequest) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    };
-
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setApiError('');
-
+  const onSubmit = (data: FormValues) => {
     if (isEditing) {
-      const { isDefault: _ignored, ...updatePayload } = form;
+      const { isDefault: _ignored, ...updatePayload } = data;
       updateMutation.mutate(
         { id: initialData!._id, data: updatePayload },
         {
           onSuccess: () => onClose(),
-          onError: (err) => setApiError(getApiError(err)),
+          onError: (err) => setError('root', { message: getApiError(err) }),
         }
       );
     } else {
-      addMutation.mutate(form, {
+      addMutation.mutate(data, {
         onSuccess: () => onClose(),
-        onError: (err) => setApiError(getApiError(err)),
+        onError: (err) => setError('root', { message: getApiError(err) }),
       });
     }
   };
@@ -115,7 +134,7 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Label */}
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -123,12 +142,11 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               </label>
               <input
                 type="text"
-                value={form.label}
-                onChange={set('label')}
                 placeholder="e.g. Home, Office"
-                required
+                {...register('label', { required: 'Label is required' })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
               />
+              {errors.label && <p className="text-red-500 text-xs mt-1">{errors.label.message}</p>}
             </div>
 
             {/* Recipient name */}
@@ -138,12 +156,13 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               </label>
               <input
                 type="text"
-                value={form.recipientName}
-                onChange={set('recipientName')}
                 placeholder="Full name"
-                required
+                {...register('recipientName', { required: 'Recipient name is required' })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
               />
+              {errors.recipientName && (
+                <p className="text-red-500 text-xs mt-1">{errors.recipientName.message}</p>
+              )}
             </div>
 
             {/* Phone */}
@@ -153,16 +172,15 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               </label>
               <input
                 type="tel"
-                value={form.phone}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                  setForm((prev) => ({ ...prev, phone: digits }));
-                }}
                 placeholder="10-digit number"
-                required
                 maxLength={10}
+                {...register('phone', {
+                  required: 'Phone is required',
+                  setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 10),
+                })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
               />
+              {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
             </div>
 
             {/* Address Line 1 */}
@@ -172,12 +190,13 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               </label>
               <input
                 type="text"
-                value={form.addressLine1}
-                onChange={set('addressLine1')}
                 placeholder="Street address, building, flat no."
-                required
+                {...register('addressLine1', { required: 'Address line 1 is required' })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
               />
+              {errors.addressLine1 && (
+                <p className="text-red-500 text-xs mt-1">{errors.addressLine1.message}</p>
+              )}
             </div>
 
             {/* Address Line 2 */}
@@ -187,9 +206,8 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               </label>
               <input
                 type="text"
-                value={form.addressLine2}
-                onChange={set('addressLine2')}
                 placeholder="Landmark, area"
+                {...register('addressLine2')}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
               />
             </div>
@@ -202,12 +220,11 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
                 </label>
                 <input
                   type="text"
-                  value={form.city}
-                  onChange={set('city')}
                   placeholder="City"
-                  required
+                  {...register('city', { required: 'City is required' })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
                 />
+                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -215,12 +232,11 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
                 </label>
                 <input
                   type="text"
-                  value={form.state}
-                  onChange={set('state')}
                   placeholder="State"
-                  required
+                  {...register('state', { required: 'State is required' })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
                 />
+                {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
               </div>
             </div>
 
@@ -231,33 +247,33 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
               </label>
               <input
                 type="text"
-                value={form.pincode}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setForm((prev) => ({ ...prev, pincode: digits }));
-                }}
                 placeholder="6-digit pincode"
-                required
                 maxLength={6}
+                {...register('pincode', {
+                  required: 'Pincode is required',
+                  setValueAs: (v: string) => v.replace(/\D/g, '').slice(0, 6),
+                })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition"
               />
+              {errors.pincode && (
+                <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>
+              )}
             </div>
 
             {/* Default checkbox */}
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={!!form.isDefault}
-                onChange={(e) => setForm((prev) => ({ ...prev, isDefault: e.target.checked }))}
+                {...register('isDefault')}
                 className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
               />
               <span className="text-sm text-gray-700">Set as default address</span>
             </label>
 
             {/* API error */}
-            {apiError && (
+            {errors.root && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {apiError}
+                {errors.root.message}
               </p>
             )}
 

@@ -1,33 +1,29 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { forgotPasswordApi } from '../utils/authApi';
 import BackButton from '../../../components/BackButton';
 
+interface FormValues {
+  email: string;
+}
+
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
   const [apiError, setApiError] = useState('');
   // success state switches the page to a confirmation view after the request succeeds.
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>();
+
+  const onSubmit = async (data: FormValues) => {
     setApiError('');
-    setEmailError('');
-
-    if (!email) {
-      setEmailError('Email is required');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError('Enter a valid email address');
-      return;
-    }
-
-    setLoading(true);
     try {
-      await forgotPasswordApi({ email });
+      await forgotPasswordApi(data);
       // The backend always responds with a generic success message regardless of whether
       // the email exists. We mirror that here — no user enumeration on the frontend either.
       setSuccess(true);
@@ -36,8 +32,6 @@ export default function ForgotPasswordPage() {
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Something went wrong. Please try again.';
       setApiError(msg);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -53,7 +47,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Check your email</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Reset link sent to <span className="font-medium text-gray-700">{email}</span>.
+            Reset link sent to <span className="font-medium text-gray-700">{getValues('email')}</span>.
             The link expires in 1 hour.
           </p>
           <Link to="/login" className="text-green-600 text-sm font-medium hover:underline">
@@ -76,17 +70,19 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition ${emailError ? 'border-red-400' : 'border-gray-300'}`}
+              {...register('email', {
+                required: 'Email is required',
+                pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' },
+              })}
+              className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-500 transition ${errors.email ? 'border-red-400' : 'border-gray-300'}`}
             />
-            {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
           </div>
 
           {apiError && (
@@ -97,16 +93,16 @@ export default function ForgotPasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold rounded-xl py-2.5 text-sm transition flex items-center justify-center gap-2"
           >
-            {loading && (
+            {isSubmitting && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             )}
-            {loading ? 'Sending…' : 'Send reset link'}
+            {isSubmitting ? 'Sending…' : 'Send reset link'}
           </button>
         </form>
 
