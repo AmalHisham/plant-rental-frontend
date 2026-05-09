@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Plant } from '../../plants/types';
 import type { CreatePlantRequest } from '../types';
+import { MAX_PLANT_IMAGES } from '../../../config/constants';
 
 interface Props {
   initialValues?: Plant;                                             // existing plant data — passed in edit mode, omitted in create mode
@@ -52,11 +53,11 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
   }, [initialValues?._id]);
 
   const existingImages = initialValues?.images ?? []; // already uploaded images (empty in create mode)
-  const totalCount = existingImages.length + newFiles.length; // total image count (max 10)
+  const totalCount = existingImages.length + newFiles.length;
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
-    const slots = 10 - existingImages.length - newFiles.length; // how many more images can be added
+    const slots = MAX_PLANT_IMAGES - existingImages.length - newFiles.length;
     if (slots <= 0) return;
     const picked = Array.from(fileList).slice(0, slots);
     setNewFiles((prev) => [...prev, ...picked]);
@@ -206,7 +207,7 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
       <div>
         <label className={labelClass}>
           Images{' '}
-          <span className="text-gray-400 font-normal">({totalCount}/10)</span>
+          <span className="text-gray-400 font-normal">({totalCount}/{MAX_PLANT_IMAGES})</span>
         </label>
 
         {/* Existing images (edit mode) */}
@@ -253,7 +254,7 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
         )}
 
         {/* Drop zone */}
-        {totalCount < 10 && (
+        {totalCount < MAX_PLANT_IMAGES && (
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}

@@ -3,6 +3,7 @@ import AdminModal from './AdminModal';
 import ConfirmDialog from './ConfirmDialog';
 import { useUploadPlantImages, useDeletePlantImage } from '../hooks/adminQueries';
 import type { Plant } from '../../plants/types';
+import { MAX_PLANT_IMAGES } from '../../../config/constants';
 
 interface Props {
   plant: Plant;        // the plant whose images are being managed
@@ -39,8 +40,7 @@ export default function PlantImagesModal({ plant, onClose }: Props) {
     );
   };
 
-  // max 10 images allowed — show how many more can be added
-  const remaining = 10 - plant.images.length;
+  const remaining = MAX_PLANT_IMAGES - plant.images.length;
 
   return (
     <>
@@ -87,7 +87,7 @@ export default function PlantImagesModal({ plant, onClose }: Props) {
               )}
               {remaining === 0 && (
                 <p className="text-xs text-red-500 mt-1 font-medium">
-                  Maximum of 10 images reached
+                  Maximum of {MAX_PLANT_IMAGES} images reached
                 </p>
               )}
             </>
