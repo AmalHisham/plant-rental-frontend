@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AdminLayout from './AdminLayout';
+import AdminModal from './AdminModal';
 import StatusBadge from './StatusBadge';
 import TableSkeleton from './TableSkeleton';
 import Pagination from './Pagination';
@@ -36,6 +37,7 @@ export default function AdminOrdersPage() {
 
   const [filters, setFilters] = useState<AdminOrdersFilters>({ page: 1, limit: 10 });
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null); // id of order currently being updated
+  const [editingOrder, setEditingOrder] = useState<AdminOrder | null>(null); // order open in edit modal
 
   const { data, isLoading, isError } = useAdminOrders(filters);
   const { mutate: updateStatus } = useUpdateOrderStatus();
@@ -50,10 +52,13 @@ export default function AdminOrdersPage() {
   const clearFilters = () => setFilters({ page: 1, limit: 10 }); // reset all filters
 
   const handleStatusChange = (order: AdminOrder, status: OrderStatus) => {
-    setPendingOrderId(order._id); // dim the row while updating
+    setPendingOrderId(order._id);
     updateStatus(
       { id: order._id, body: { status } },
-      { onSettled: () => setPendingOrderId(null) }, // clear pending when done (success or error)
+      {
+        onSuccess: () => setEditingOrder((prev) => prev ? { ...prev, status } : prev),
+        onSettled: () => setPendingOrderId(null),
+      },
     );
   };
 
@@ -61,15 +66,22 @@ export default function AdminOrdersPage() {
     setPendingOrderId(order._id);
     updateDamage(
       { id: order._id, body: { damageStatus } },
-      { onSettled: () => setPendingOrderId(null) },
+      {
+        onSuccess: () => setEditingOrder((prev) => prev ? { ...prev, damageStatus } : prev),
+        onSettled: () => setPendingOrderId(null),
+      },
     );
   };
 
   const handleDepositToggle = (order: AdminOrder) => {
     setPendingOrderId(order._id);
+    const next = !order.depositRefunded;
     updateDeposit(
-      { id: order._id, body: { depositRefunded: !order.depositRefunded } }, // flip current value
-      { onSettled: () => setPendingOrderId(null) },
+      { id: order._id, body: { depositRefunded: next } },
+      {
+        onSuccess: () => setEditingOrder((prev) => prev ? { ...prev, depositRefunded: next } : prev),
+        onSettled: () => setPendingOrderId(null),
+      },
     );
   };
 
@@ -197,7 +209,7 @@ export default function AdminOrdersPage() {
                         'Damage',
                         'Payment',
                         'Deposit',
-                        canUpdateStatus || canUpdateDamage || canUpdateDeposit ? 'Actions' : null,
+                        canUpdateStatus || canUpdateDamage || canUpdateDeposit ? '' : null,
                       ]
                         .filter(Boolean)
                         .map((h) => (
@@ -281,55 +293,16 @@ export default function AdminOrdersPage() {
 
                             {(canUpdateStatus || canUpdateDamage || canUpdateDeposit) && (
                               <td className="px-4 py-3">
-                                <div className="flex flex-col gap-2 min-w-[120px]">
-                                  {canUpdateStatus && (
-                                    <div>
-                                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-0.5">Status</p>
-                                      <select
-                                        className={selectClass}
-                                        value={order.status}
-                                        disabled={isPending}
-                                        onChange={(e) =>
-                                          handleStatusChange(order, e.target.value as OrderStatus)
-                                        }
-                                      >
-                                        <option value="booked">Booked</option>
-                                        <option value="delivered">Delivered</option>
-                                        <option value="picked">Returned</option>
-                                      </select>
-                                    </div>
-                                  )}
-                                  {canUpdateDamage && (
-                                    <div>
-                                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-0.5">Damage</p>
-                                      <select
-                                        className={selectClass}
-                                        value={order.damageStatus}
-                                        disabled={isPending}
-                                        onChange={(e) =>
-                                          handleDamageChange(order, e.target.value as DamageStatus)
-                                        }
-                                      >
-                                        <option value="none">No Damage</option>
-                                        <option value="minor">Minor</option>
-                                        <option value="major">Major</option>
-                                      </select>
-                                    </div>
-                                  )}
-                                  {canUpdateDeposit && (
-                                    <button
-                                      disabled={isPending}
-                                      onClick={() => handleDepositToggle(order)}
-                                      className={`text-xs font-medium px-2 py-1.5 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                                        order.depositRefunded
-                                          ? 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                                          : 'border-green-200 text-green-700 hover:bg-green-50'
-                                      }`}
-                                    >
-                                      {order.depositRefunded ? 'Undo Refund' : 'Mark Refunded'}
-                                    </button>
-                                  )}
-                                </div>
+                                <button
+                                  onClick={() => setEditingOrder(order)}
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+                                  title="Edit order"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                                  </svg>
+                                </button>
                               </td>
                             )}
                           </tr>
@@ -349,6 +322,71 @@ export default function AdminOrdersPage() {
           </>
         )}
       </div>
+
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <AdminModal
+          open={!!editingOrder}
+          title={`Edit Order #${editingOrder._id.slice(-8)}`}
+          onClose={() => setEditingOrder(null)}
+          isLoading={pendingOrderId === editingOrder._id}
+        >
+          <div className="flex flex-col gap-5">
+            {canUpdateStatus && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">
+                  Status
+                </label>
+                <select
+                  className={selectClass}
+                  value={editingOrder.status}
+                  disabled={pendingOrderId === editingOrder._id}
+                  onChange={(e) => handleStatusChange(editingOrder, e.target.value as OrderStatus)}
+                >
+                  <option value="booked">Booked</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="picked">Returned</option>
+                </select>
+              </div>
+            )}
+            {canUpdateDamage && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">
+                  Damage
+                </label>
+                <select
+                  className={selectClass}
+                  value={editingOrder.damageStatus}
+                  disabled={pendingOrderId === editingOrder._id}
+                  onChange={(e) => handleDamageChange(editingOrder, e.target.value as DamageStatus)}
+                >
+                  <option value="none">No Damage</option>
+                  <option value="minor">Minor</option>
+                  <option value="major">Major</option>
+                </select>
+              </div>
+            )}
+            {canUpdateDeposit && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">
+                  Deposit
+                </label>
+                <button
+                  disabled={pendingOrderId === editingOrder._id}
+                  onClick={() => handleDepositToggle(editingOrder)}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    editingOrder.depositRefunded
+                      ? 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                      : 'border-green-200 text-green-700 hover:bg-green-50'
+                  }`}
+                >
+                  {editingOrder.depositRefunded ? 'Undo Refund' : 'Mark Refunded'}
+                </button>
+              </div>
+            )}
+          </div>
+        </AdminModal>
+      )}
     </AdminLayout>
   );
 }
