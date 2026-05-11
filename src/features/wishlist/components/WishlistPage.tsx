@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../hooks/wishlistQueries';
 import PlantCard from '../../plants/components/PlantCard';
@@ -7,7 +7,13 @@ import type { PlantCardData } from '../../plants/types';
 import BackButton from '../../../components/BackButton';
 
 export default function WishlistPage() {
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
+
+  const setPage = (p: number) => {
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set('page', String(p)); return next; }, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const { data, isLoading, isError } = useWishlist(page);
   // Default to empty array so the empty-state check works without extra null guards.
   const items = data?.data.plants ?? [];
@@ -65,7 +71,7 @@ export default function WishlistPage() {
               <div className="flex justify-center items-center gap-2 mt-10">
                 <button
                   disabled={page <= 1}
-                  onClick={() => { setPage(page - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onClick={() => setPage(page - 1)}
                   className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Previous
@@ -73,7 +79,7 @@ export default function WishlistPage() {
                 <span className="text-sm text-gray-500">Page {page} of {pagination.totalPages}</span>
                 <button
                   disabled={page >= pagination.totalPages}
-                  onClick={() => { setPage(page + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onClick={() => setPage(page + 1)}
                   className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Next

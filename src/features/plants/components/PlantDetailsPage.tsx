@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import BackButton from '../../../components/BackButton';
 import Toast from '../../../components/Toast';
 import Stepper from '../../../components/Stepper';
@@ -283,16 +283,25 @@ const DURATION_PRESETS = [
 export default function PlantDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Read auth flag from Redux — avoids a redundant API call just to check login state.
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   // enabled: !!id guard (in plantsQueries) prevents the query from firing when id is undefined.
   const { data, isLoading, isError } = usePlant(id ?? '');
 
-  const [quantity, setQuantity]             = useState(1);
-  const [rentalDays, setRentalDays]         = useState(7);
+  const rawQuantity = parseInt(searchParams.get('quantity') ?? '', 10);
+  const rawDays     = parseInt(searchParams.get('days') ?? '', 10);
+
+  const initialQuantity = Number.isFinite(rawQuantity) && rawQuantity >= 1 ? rawQuantity : 1;
+  const initialDays     = Number.isFinite(rawDays)     && rawDays >= 1     ? rawDays     : 7;
+
+  const [quantity, setQuantity]         = useState(initialQuantity);
+  const [rentalDays, setRentalDays]     = useState(initialDays);
   // activePreset tracks which pill is highlighted; null means the user typed a custom value.
-  const [activePreset, setActivePreset]     = useState<number | null>(7);
+  const [activePreset, setActivePreset] = useState<number | null>(
+    ([7, 14, 30] as const).find((d) => d === initialDays) ?? null,
+  );
   const [toast, setToast]                   = useState({ visible: false, message: '' });
   // notifyRequested is purely UI state — there's no backend endpoint for notifications yet.
   const [notifyRequested, setNotifyRequested] = useState(false);
@@ -308,9 +317,24 @@ export default function PlantDetailsPage() {
     setTimeout(() => setToast({ visible: false, message: '' }), 2500);
   };
 
+  // Updates a single key in the URL's search params without disturbing other keys.
+  // replace: true keeps the browser history stack clean — every stepper click
+  // should not create a new history entry.
+  const updateSearchParams = (key: string, value: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set(key, value);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
   const handlePreset = (days: number) => {
     setRentalDays(days);
     setActivePreset(days);
+    updateSearchParams('days', String(days));
   };
 
   const handleCustomDays = (newDays: number) => {
@@ -318,7 +342,20 @@ export default function PlantDetailsPage() {
     // If the new value happens to match a preset, re-highlight that pill.
     const match = DURATION_PRESETS.find((p) => p.days === newDays);
     setActivePreset(match ? match.days : null);
+    updateSearchParams('days', String(newDays));
   };
+
+  // Clamp quantity once plant data is available — in case the URL param
+  // references more units than are actually in stock.
+  useEffect(() => {
+    if (!data?.data) return;
+    if (quantity > data.data.stock) {
+      const clamped = Math.max(1, data.data.stock);
+      setQuantity(clamped);
+      updateSearchParams('quantity', String(clamped));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.data?.stock]);
 
   if (isLoading) return <PlantDetailSkeleton />;
 
@@ -414,6 +451,18 @@ export default function PlantDetailsPage() {
     if (!isAuthenticated) { navigate('/login'); return; }
     if (isWishlisted) removeFromWishlist(plant._id);
     else              addToWishlist(plant._id);
+  };
+
+  const handleQuantityDecrement = () => {
+    const next = Math.max(1, quantity - 1);
+    setQuantity(next);
+    updateSearchParams('quantity', String(next));
+  };
+
+  const handleQuantityIncrement = () => {
+    const next = Math.min(plant.stock, quantity + 1);
+    setQuantity(next);
+    updateSearchParams('quantity', String(next));
   };
 
   return (
@@ -571,8 +620,8 @@ export default function PlantDetailsPage() {
                       {/* Max capped at plant.stock so the user can't order more than available. */}
                       <Stepper
                         value={quantity}
-                        onDecrement={() => setQuantity((q) => Math.max(1, q - 1))}
-                        onIncrement={() => setQuantity((q) => Math.min(plant.stock, q + 1))}
+                        onDecrement={handleQuantityDecrement}
+                        onIncrement={handleQuantityIncrement}
                         min={1}
                         max={plant.stock}
                       />

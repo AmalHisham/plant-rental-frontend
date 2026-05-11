@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import AdminModal from './AdminModal';
 import ConfirmDialog from './ConfirmDialog';
@@ -19,9 +20,16 @@ import type { Plant } from '../../plants/types';
 import type { CreatePlantRequest } from '../types';
 
 export default function AdminPlantsPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const debouncedSearch = useDebounce(search, 400); // wait 400ms after typing before searching
+
+  const updateParam = (key: string, value: string) => {
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); if (value) { next.set(key, value); } else { next.delete(key); } return next; }, { replace: true });
+  };
+
+  const setPage = (p: number) => updateParam('page', String(p));
 
   const [modalOpen, setModalOpen] = useState(false);          // controls plant form modal
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null); // null = create mode, plant = edit mode
@@ -44,8 +52,14 @@ export default function AdminPlantsPage() {
   const isMutating = creating || updating || uploading || deletingImage; // true while any write operation is in progress
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setPage(1); // reset to page 1 on new search
+    const value = e.target.value;
+    setSearch(value);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) { next.set('search', value); } else { next.delete('search'); }
+      next.delete('page'); // reset to page 1 on new search
+      return next;
+    }, { replace: true });
   };
 
   const openCreate = () => {

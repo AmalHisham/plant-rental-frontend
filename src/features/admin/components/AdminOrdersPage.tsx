@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import AdminModal from './AdminModal';
 import StatusBadge from './StatusBadge';
@@ -35,7 +36,19 @@ export default function AdminOrdersPage() {
   const canUpdateDamage = role === 'super_admin' || role === 'order_admin';
   const canUpdateDeposit = role === 'super_admin' || role === 'order_admin';
 
-  const [filters, setFilters] = useState<AdminOrdersFilters>({ page: 1, limit: 10 });
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Derive filters from URL — any missing param falls back to the default value.
+  const filters: AdminOrdersFilters = {
+    page: Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1),
+    limit: 10,
+    status:        (searchParams.get('status') as AdminOrdersFilters['status'])        || undefined,
+    damageStatus:  (searchParams.get('damageStatus') as AdminOrdersFilters['damageStatus']) || undefined,
+    paymentStatus: (searchParams.get('paymentStatus') as AdminOrdersFilters['paymentStatus']) || undefined,
+    startDate:     searchParams.get('startDate') || undefined,
+    endDate:       searchParams.get('endDate') || undefined,
+  };
+
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null); // id of order currently being updated
   const [editingOrder, setEditingOrder] = useState<AdminOrder | null>(null); // order open in edit modal
 
@@ -44,12 +57,21 @@ export default function AdminOrdersPage() {
   const { mutate: updateDamage } = useUpdateOrderDamage();
   const { mutate: updateDeposit } = useUpdateOrderDeposit();
 
-  // update a single filter and reset to page 1
-  const applyFilter = (key: keyof AdminOrdersFilters, value: string | number | undefined) => {
-    setFilters((prev) => ({ ...prev, [key]: value || undefined, page: 1 }));
+  // update a single filter param and reset to page 1
+  const applyFilter = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) { next.set(key, value); } else { next.delete(key); }
+      next.delete('page'); // reset to page 1 on filter change
+      return next;
+    }, { replace: true });
   };
 
-  const clearFilters = () => setFilters({ page: 1, limit: 10 }); // reset all filters
+  const clearFilters = () => setSearchParams(new URLSearchParams(), { replace: true }); // reset all filters
+
+  const setPage = (p: number) => {
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set('page', String(p)); return next; }, { replace: true });
+  };
 
   const handleStatusChange = (order: AdminOrder, status: OrderStatus) => {
     setPendingOrderId(order._id);
@@ -317,7 +339,7 @@ export default function AdminOrdersPage() {
             <Pagination
               page={filters.page ?? 1}
               totalPages={totalPages}
-              onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+              onPageChange={setPage}
             />
           </>
         )}

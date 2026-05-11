@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import AdminModal from './AdminModal';
 import ConfirmDialog from './ConfirmDialog';
@@ -53,9 +54,20 @@ export default function AdminUsersPage() {
   const role = currentUser?.role;
   const isSuperAdmin = role === 'super_admin'; // only super_admin can create/delete users
 
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Controlled search input — kept in local state so the input stays responsive.
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const debouncedSearch = useDebounce(search, 400); // wait 400ms after typing before searching
-  const [filters, setFilters] = useState<AdminUsersFilters>({ page: 1, limit: 10 });
+
+  // Derive filters from URL — any missing param falls back to undefined (no filter applied).
+  const rawIsActive = searchParams.get('isActive');
+  const filters: AdminUsersFilters = {
+    page: Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1),
+    limit: 10,
+    role:     (searchParams.get('role') as AdminUsersFilters['role']) || undefined,
+    isActive: rawIsActive === null ? undefined : rawIsActive === 'true',
+  };
 
   const [createModalOpen, setCreateModalOpen] = useState(false); // controls "Create Admin" modal visibility
   const [confirmOpen, setConfirmOpen] = useState(false);         // controls delete confirmation dialog
@@ -73,26 +85,28 @@ export default function AdminUsersPage() {
   const { mutate: removeUser, isPending: deleting } = useDeleteUser();
   const { mutate: createAdmin, isPending: creating } = useCreateAdmin();
 
+  const updateParam = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) { next.set(key, value); } else { next.delete(key); }
+      next.delete('page'); // reset to page 1 on filter change
+      return next;
+    }, { replace: true });
+  };
+
+  const setPage = (p: number) => {
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set('page', String(p)); return next; }, { replace: true });
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setFilters((prev) => ({ ...prev, page: 1 })); // reset to page 1 on new search
+    const value = e.target.value;
+    setSearch(value);
+    updateParam('search', value);
   };
 
-  const applyRoleFilter = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      role: value ? (value as UserRole) : undefined, // clear role filter if empty string selected
-      page: 1,
-    }));
-  };
+  const applyRoleFilter = (value: string) => updateParam('role', value);
 
-  const applyActiveFilter = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      isActive: value === '' ? undefined : value === 'true', // convert string "true"/"false" to boolean
-      page: 1,
-    }));
-  };
+  const applyActiveFilter = (value: string) => updateParam('isActive', value);
 
   // flip the user's active status (active → inactive, inactive → active)
   const handleToggleStatus = (userId: string, isActive: boolean) => {
@@ -216,7 +230,7 @@ export default function AdminUsersPage() {
             <button
               onClick={() => {
                 setSearch('');
-                setFilters({ page: 1, limit: 10 });
+                setSearchParams(new URLSearchParams(), { replace: true });
               }}
               className="text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors"
             >
@@ -346,7 +360,7 @@ export default function AdminUsersPage() {
             <Pagination
               page={filters.page ?? 1}
               totalPages={totalPages}
-              onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+              onPageChange={setPage}
             />
           </>
         )}

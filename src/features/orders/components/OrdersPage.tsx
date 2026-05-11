@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import BackButton from '../../../components/BackButton';
 import { useMyOrders } from '../hooks/ordersQueries';
@@ -144,7 +144,14 @@ function OrdersSkeleton() {
 // ─── OrdersPage ───────────────────────────────────────────────────────────────
 
 export default function OrdersPage() {
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
+
+  const setPage = (p: number) => {
+    setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set('page', String(p)); return next; }, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const { data, isLoading, isError } = useMyOrders(page);
 
   if (isLoading) {
@@ -217,10 +224,7 @@ export default function OrdersPage() {
           <Pagination
             page={pagination.page}
             totalPages={pagination.totalPages}
-            onPageChange={(p) => {
-              setPage(p);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onPageChange={setPage}
           />
         )}
       </div>
