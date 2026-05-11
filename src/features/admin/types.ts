@@ -141,6 +141,8 @@ export interface AdminPlantsFilters {
   search?: string;
   page?: number;
   limit?: number;
+  sortBy?: 'name' | 'pricePerDay' | 'depositAmount' | 'stock' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface CreatePlantRequest {

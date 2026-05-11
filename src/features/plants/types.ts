@@ -49,6 +49,9 @@ export interface PlantResponse {
   data: Plant;
 }
 
+export type PlantSortBy = 'name' | 'pricePerDay' | 'depositAmount' | 'stock' | 'createdAt';
+export type SortOrder = 'asc' | 'desc';
+
 export interface PlantFilters {
   category?: string;
   careLevel?: CareLevel;
@@ -57,4 +60,6 @@ export interface PlantFilters {
   search?: string;
   page?: number;
   limit?: number;
+  sortBy?: PlantSortBy;
+  sortOrder?: SortOrder;
 }

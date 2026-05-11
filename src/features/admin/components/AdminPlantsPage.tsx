@@ -19,17 +19,81 @@ import { useDebounce } from '../../../hooks/useDebounce';
 import type { Plant } from '../../plants/types';
 import type { CreatePlantRequest } from '../types';
 
+type SortBy = 'name' | 'pricePerDay' | 'depositAmount' | 'stock' | 'createdAt';
+type SortOrder = 'asc' | 'desc';
+
+// Default sort direction when first clicking a column.
+// Numeric columns show highest-first by default; name sorts A→Z.
+const DEFAULT_SORT_ORDER: Record<SortBy, SortOrder> = {
+  name:          'asc',
+  pricePerDay:   'desc',
+  depositAmount: 'desc',
+  stock:         'desc',
+  createdAt:     'desc',
+};
+
+function SortIcon({ active, order }: { active: boolean; order: SortOrder }) {
+  return (
+    <span className="ml-1 inline-flex items-center">
+      {!active && (
+        <svg className="w-4 h-4 text-gray-300" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <line x1="2" y1="4"  x2="11" y2="4"  />
+          <line x1="2" y1="8"  x2="8"  y2="8"  />
+          <line x1="2" y1="12" x2="5"  y2="12" />
+        </svg>
+      )}
+      {active && order === 'desc' && (
+        <svg className="w-4 h-4 text-green-600" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="2" y1="4"  x2="9"  y2="4"  />
+          <line x1="2" y1="8"  x2="7"  y2="8"  />
+          <line x1="2" y1="12" x2="5"  y2="12" />
+          <line x1="13" y1="3" x2="13" y2="13" />
+          <polyline points="10,10 13,13 16,10" />
+        </svg>
+      )}
+      {active && order === 'asc' && (
+        <svg className="w-4 h-4 text-green-600" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="2" y1="4"  x2="9"  y2="4"  />
+          <line x1="2" y1="8"  x2="7"  y2="8"  />
+          <line x1="2" y1="12" x2="5"  y2="12" />
+          <line x1="13" y1="3" x2="13" y2="13" />
+          <polyline points="10,6 13,3 16,6" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 export default function AdminPlantsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const debouncedSearch = useDebounce(search, 400); // wait 400ms after typing before searching
 
+  const sortBy = (searchParams.get('sortBy') as SortBy) || 'createdAt';
+  const sortOrder = (searchParams.get('sortOrder') as SortOrder) || 'desc';
+
   const updateParam = (key: string, value: string) => {
     setSearchParams((prev) => { const next = new URLSearchParams(prev); if (value) { next.set(key, value); } else { next.delete(key); } return next; }, { replace: true });
   };
 
   const setPage = (p: number) => updateParam('page', String(p));
+
+  const handleSort = (col: SortBy) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (prev.get('sortBy') === col) {
+        // same column — toggle direction
+        next.set('sortOrder', prev.get('sortOrder') === 'asc' ? 'desc' : 'asc');
+      } else {
+        // new column — use its natural default direction
+        next.set('sortBy', col);
+        next.set('sortOrder', DEFAULT_SORT_ORDER[col]);
+      }
+      next.delete('page');
+      return next;
+    }, { replace: true });
+  };
 
   const [modalOpen, setModalOpen] = useState(false);          // controls plant form modal
   const [editingPlant, setEditingPlant] = useState<Plant | null>(null); // null = create mode, plant = edit mode
@@ -41,6 +105,8 @@ export default function AdminPlantsPage() {
     search: debouncedSearch || undefined,
     page,
     limit: 10,
+    sortBy,
+    sortOrder,
   });
 
   const { mutate: create, isPending: creating } = useCreatePlant();
@@ -187,16 +253,42 @@ export default function AdminPlantsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      {['Name', 'Category', '₹/Day', 'Deposit', 'Stock', 'Care', 'Available', 'Actions'].map(
-                        (h) => (
+                      {(
+                        [
+                          { label: 'Name',      col: 'name'          },
+                          { label: 'Category',  col: null            },
+                          { label: '₹/Day',     col: 'pricePerDay'   },
+                          { label: 'Deposit',   col: 'depositAmount' },
+                          { label: 'Stock',     col: 'stock'         },
+                          { label: 'Care',      col: null            },
+                          { label: 'Available', col: null            },
+                          { label: 'Actions',   col: null            },
+                        ] as { label: string; col: SortBy | null }[]
+                      ).map(({ label, col }) => {
+                        const isActive = col !== null && sortBy === col;
+                        return col ? (
+                          <th key={label} className="px-4 py-3 whitespace-nowrap">
+                            <button
+                              onClick={() => handleSort(col)}
+                              className={`inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide rounded-md px-2 py-1 transition-colors ${
+                                isActive
+                                  ? 'text-green-700 bg-green-50'
+                                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                              }`}
+                            >
+                              {label}
+                              <SortIcon active={isActive} order={sortOrder} />
+                            </button>
+                          </th>
+                        ) : (
                           <th
-                            key={h}
+                            key={label}
                             className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap"
                           >
-                            {h}
+                            {label}
                           </th>
-                        ),
-                      )}
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
