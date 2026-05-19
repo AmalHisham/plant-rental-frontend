@@ -417,12 +417,14 @@ export default function CheckoutPage() {
               <div className="space-y-3">
                 {items.map((item) => {
                   const plant = item.plantId;
+                  const image = plant.images?.[0];
+                  const thumbSrc = typeof image === 'string' ? image : image?.thumb;
                   return (
                     <div key={plant._id} className="flex gap-3">
                       {/* Thumbnail */}
                       <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-green-50 border border-gray-100 flex items-center justify-center">
-                        {plant.images?.[0] ? (
-                          <img src={plant.images[0]} alt={plant.name} className="w-full h-full object-cover" />
+                        {thumbSrc ? (
+                          <img src={thumbSrc} alt={plant.name} className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-xl select-none">🪴</span>
                         )}

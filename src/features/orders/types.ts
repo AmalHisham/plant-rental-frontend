@@ -1,3 +1,5 @@
+import type { PlantImage } from '../plants/types';
+
 export type OrderStatus = 'booked' | 'delivered' | 'picked';
 export type DamageStatus = 'none' | 'minor' | 'major';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
@@ -7,7 +9,7 @@ export interface OrderPlant {
   _id: string;
   name: string;
   category: string;
-  images: string[];
+  images: PlantImage[];
   pricePerDay: number;
   depositAmount: number;
 }

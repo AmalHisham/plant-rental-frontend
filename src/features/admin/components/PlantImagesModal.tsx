@@ -41,6 +41,8 @@ export default function PlantImagesModal({ plant, onClose }: Props) {
   };
 
   const remaining = MAX_PLANT_IMAGES - plant.images.length;
+  const getOriginalUrl = (image: Plant['images'][number]) =>
+    typeof image === 'string' ? image : image.original;
 
   return (
     <>
@@ -99,7 +101,9 @@ export default function PlantImagesModal({ plant, onClose }: Props) {
           <p className="text-sm text-gray-400 text-center py-4">No images yet.</p>
         ) : (
           <div className="grid grid-cols-3 gap-3">
-            {plant.images.map((url) => (
+            {plant.images.map((image) => {
+              const url = getOriginalUrl(image);
+              return (
               <div key={url} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
                 <img src={url} alt="" className="w-full h-full object-cover" />
                 <button
@@ -113,7 +117,7 @@ export default function PlantImagesModal({ plant, onClose }: Props) {
                   </span>
                 </button>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </AdminModal>

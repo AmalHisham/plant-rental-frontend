@@ -315,9 +315,9 @@ export default function AdminPlantsPage() {
                         >
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {plant.images[0] ? (
+                              {getThumbUrl(plant.images[0]) ? (
                                 <img
-                                  src={plant.images[0]}
+                                  src={getThumbUrl(plant.images[0])}
                                   alt=""
                                   className="w-10 h-10 rounded-lg object-cover shrink-0 bg-green-50"
                                 />
@@ -426,3 +426,5 @@ export default function AdminPlantsPage() {
     </AdminLayout>
   );
 }
+  const getThumbUrl = (image: Plant['images'][number] | undefined) =>
+    typeof image === 'string' ? image : image?.thumb;

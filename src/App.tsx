@@ -36,6 +36,7 @@ import AdminRoute from './components/AdminRoute';
 import MainLayout from './components/MainLayout';
 
 import ScrollToTopButton from './components/ScrollToTopButton';
+import AIChatWidget from './components/ai/AIChatWidget';
 
 // Admin pages
 import AdminDashboardPage from './features/admin/components/AdminDashboardPage';
@@ -43,6 +44,7 @@ import AdminPlantsPage from './features/admin/components/AdminPlantsPage';
 import AdminOrdersPage from './features/admin/components/AdminOrdersPage';
 import AdminUsersPage from './features/admin/components/AdminUsersPage';
 import AdminProfilePage from './features/admin/components/AdminProfilePage';
+import { ENABLE_AI_PREVIEW } from './config/constants';
 
 const AIPreviewPage = () => <div className="p-8 text-xl">AI Office Preview</div>;
 const AIChatbotPage = () => <div className="p-8 text-xl">AI Chatbot</div>;
@@ -65,8 +67,8 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailsPage />} />
-            <Route path="/ai/preview" element={<AIPreviewPage />} />
-            <Route path="/ai/chat" element={<AIChatbotPage />} />
+            {ENABLE_AI_PREVIEW && <Route path="/ai/preview" element={<AIPreviewPage />} />}
+            {ENABLE_AI_PREVIEW && <Route path="/ai/chat" element={<AIChatbotPage />} />}
           </Route>
         </Route>
 
@@ -95,6 +97,7 @@ function App() {
         {/* Any unknown URL → home page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <AIChatWidget />
       {/* Outside <Routes> so it stays visible on every page */}
       <ScrollToTopButton />
     </BrowserRouter>

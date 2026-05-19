@@ -25,6 +25,8 @@ interface FormValues {
 const CARE_LEVELS = ['easy', 'medium', 'hard'] as const;
 
 export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLoading }: Props) {
+  const getOriginalUrl = (image: Plant['images'][number]) =>
+    typeof image === 'string' ? image : image.original;
   const {
     register,
     handleSubmit,
@@ -213,7 +215,9 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
         {/* Existing images (edit mode) */}
         {existingImages.length > 0 && (
           <div className="grid grid-cols-4 gap-2 mb-2">
-            {existingImages.map((url) => (
+            {existingImages.map((image) => {
+              const url = getOriginalUrl(image);
+              return (
               <div key={url} className="relative group rounded-lg overflow-hidden aspect-square bg-gray-100">
                 <img src={url} alt="" className="w-full h-full object-cover" />
                 {onDeleteImage && (
@@ -229,7 +233,7 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
                   </button>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         )}
 

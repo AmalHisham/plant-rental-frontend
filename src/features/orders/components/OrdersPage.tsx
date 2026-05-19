@@ -53,7 +53,8 @@ function OrderCard({ order }: { order: Order }) {
     .join(', ');
 
   // Show the first plant's image as the card thumbnail.
-  const firstImage = order.plants[0]?.plantId.images?.[0];
+  const firstImageRaw = order.plants[0]?.plantId.images?.[0];
+  const firstImage = typeof firstImageRaw === 'string' ? firstImageRaw : firstImageRaw?.thumb;
 
   return (
     <Link

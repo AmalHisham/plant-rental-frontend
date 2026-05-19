@@ -5,11 +5,12 @@ import Toast from '../../../components/Toast';
 import Stepper from '../../../components/Stepper';
 import { usePlant } from '../hooks/plantsQueries';
 import CareLevelBadge from './CareLevelBadge';
-import type { CareLevel } from '../types';
+import type { CareLevel, PlantImage } from '../types';
 import { useWishlistIds, useAddToWishlist, useRemoveFromWishlist } from '../../wishlist/hooks/wishlistQueries';
 import { useAddToCart } from '../../cart/hooks/cartQueries';
 import { useAppSelector } from '../../../store';
 import axios from 'axios';
+import { ENABLE_AI_PREVIEW } from '../../../config/constants';
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ function PlantDetailSkeleton() {
 // ─── Image Gallery ────────────────────────────────────────────────────────────
 
 interface GalleryProps {
-  images: string[];
+  images: PlantImage[] | string[];
   name: string;
 }
 
@@ -80,6 +81,7 @@ function ImageGallery({ images, name }: GalleryProps) {
   // fading drives a CSS opacity transition: image fades to 0 → swap src → fade back to 1.
   // This avoids a jarring instant swap without a complex animation library.
   const [fading, setFading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // useCallback: switchTo is referenced in the keyboard effect's dep array.
   // Without memoization every render would re-register the keydown listener.
@@ -104,10 +106,24 @@ function ImageGallery({ images, name }: GalleryProps) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') switchTo(Math.max(0, active - 1));
       if (e.key === 'ArrowRight') switchTo(Math.min(images.length - 1, active + 1));
+      if (e.key === 'Escape') setIsFullscreen(false);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [active, images.length, switchTo]);
+
+  // Prevent background scrolling when fullscreen preview is open.
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isFullscreen]);
 
   if (images.length === 0) {
     return (
@@ -120,11 +136,14 @@ function ImageGallery({ images, name }: GalleryProps) {
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
+      <div
+        onClick={() => setIsFullscreen(true)}
+        className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 cursor-zoom-in group"
+      >
         <img
-          src={images[active]}
+          src={getMediumSrc(images[active])}
           alt={name}
-          className={`w-full h-full object-cover transition-opacity duration-150 ${
+          className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-[1.02] ${
             fading ? 'opacity-0' : 'opacity-100'
           }`}
         />
@@ -162,7 +181,7 @@ function ImageGallery({ images, name }: GalleryProps) {
       {/* Thumbnails — active thumbnail gets a green border; others are dimmed. */}
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {images.map((src, i) => (
+          {images.map((img, i) => (
             <button
               key={i}
               onClick={() => switchTo(i)}
@@ -173,9 +192,60 @@ function ImageGallery({ images, name }: GalleryProps) {
                   : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              <img src={src} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+              <img src={getMediumSrc(img)} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
+        </div>
+      )}
+
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setIsFullscreen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${name} fullscreen preview`}
+        >
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="absolute top-4 right-4 text-white/90 hover:text-white text-3xl leading-none"
+            aria-label="Close fullscreen preview"
+          >
+            ×
+          </button>
+
+          {images.length > 1 && active > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                switchTo(active - 1);
+              }}
+              aria-label="Previous image"
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-colors"
+            >
+              <ChevronLeftIcon />
+            </button>
+          )}
+
+          <img
+            src={getOriginalSrc(images[active])}
+            alt={name}
+            className="max-w-full max-h-[88vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {images.length > 1 && active < images.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                switchTo(active + 1);
+              }}
+              aria-label="Next image"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-colors"
+            >
+              <ChevronRightIcon />
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -453,6 +523,11 @@ export default function PlantDetailsPage() {
     else              addToWishlist(plant._id);
   };
 
+  const handleAIPreview = () => {
+    if (!isAuthenticated) { navigate('/login'); return; }
+    navigate(`/ai/preview?plantId=${plant._id}`);
+  };
+
   const handleQuantityDecrement = () => {
     const next = Math.max(1, quantity - 1);
     setQuantity(next);
@@ -672,6 +747,15 @@ export default function PlantDetailsPage() {
                     >
                       {cartAdding ? 'Adding…' : 'Add to Cart'}
                     </button>
+                    {ENABLE_AI_PREVIEW && (
+                      <button
+                        onClick={handleAIPreview}
+                        disabled={cartAdding}
+                        className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100 font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        Preview In My Space
+                      </button>
+                    )}
                   </div>
                   </div>{/* end p-5 space-y-4 */}
                 </div>
@@ -736,3 +820,7 @@ export default function PlantDetailsPage() {
     </>
   );
 }
+  const getMediumSrc = (image: PlantImage | string) =>
+    typeof image === 'string' ? image : image.medium;
+  const getOriginalSrc = (image: PlantImage | string) =>
+    typeof image === 'string' ? image : image.original;

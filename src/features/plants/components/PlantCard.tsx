@@ -9,6 +9,8 @@ interface Props {
 
 export default function PlantCard({ plant }: Props) {
   const navigate = useNavigate();
+  const primaryImage = plant.images[0];
+  const imageSrc = typeof primaryImage === 'string' ? primaryImage : primaryImage?.thumb;
 
   // outOfStock: either the admin has toggled isAvailable off OR physical stock hit 0.
   // lowStock threshold is 3 — amber warning without blocking the user.
@@ -25,10 +27,11 @@ export default function PlantCard({ plant }: Props) {
     >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        {plant.images[0] ? (
+        {imageSrc ? (
           <img
-            src={plant.images[0]}
+            src={imageSrc}
             alt={plant.name}
+            loading="lazy"
             // scale-105 on hover is applied via parent's group class so the animation
             // runs independently of the card's own translate-y.
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

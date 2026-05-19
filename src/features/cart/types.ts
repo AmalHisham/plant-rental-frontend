@@ -1,4 +1,5 @@
 export type CareLevel = 'easy' | 'medium' | 'hard';
+import type { PlantImage } from '../plants/types';
 
 // Full plant info embedded in each cart item (the backend fills this in automatically)
 export interface CartPlant {
@@ -8,7 +9,7 @@ export interface CartPlant {
   pricePerDay: number;
   depositAmount: number;
   careLevel: CareLevel;
-  images: string[];
+  images: PlantImage[];
   isAvailable: boolean;
   stock: number;  // used to cap the quantity stepper on the cart page
 }

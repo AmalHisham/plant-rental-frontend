@@ -1,4 +1,4 @@
-import type { CareLevel } from '../plants/types';
+import type { CareLevel, PlantImage } from '../plants/types';
 import type { OrderStatus, DamageStatus, PaymentStatus } from '../orders/types';
 import type { UserRole } from '../auth/types';
 
@@ -153,7 +153,7 @@ export interface CreatePlantRequest {
   depositAmount: number;
   stock: number;
   careLevel: CareLevel;
-  images: string[];
+  images: PlantImage[];
   isAvailable: boolean;
 }
 
@@ -170,7 +170,7 @@ export interface AdminPlantResponse {
     depositAmount: number;
     stock: number;
     careLevel: CareLevel;
-    images: string[];
+    images: PlantImage[];
     isAvailable: boolean;
     isDeleted: boolean;
     createdAt: string;

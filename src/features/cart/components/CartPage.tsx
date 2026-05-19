@@ -45,7 +45,8 @@ function CartItemCard({
 }: CartItemCardProps) {
   // item.plantId is the populated plant document, not a bare id string.
   const plant = item.plantId;
-  const imageSrc = plant.images?.[0];
+  const image = plant.images?.[0];
+  const imageSrc = typeof image === 'string' ? image : image?.thumb;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm">

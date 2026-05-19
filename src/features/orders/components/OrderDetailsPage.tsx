@@ -186,7 +186,8 @@ export default function OrderDetailsPage() {
           <div className="space-y-3">
             {order.plants.map((item) => {
               const plant = item.plantId;
-              const img = plant.images?.[0];
+              const image = plant.images?.[0];
+              const img = typeof image === 'string' ? image : image?.thumb;
               return (
                 <div key={plant._id} className="flex items-center gap-3">
                   <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-green-50 flex items-center justify-center">

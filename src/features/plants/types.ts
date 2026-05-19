@@ -1,5 +1,11 @@
 export type CareLevel = 'easy' | 'medium' | 'hard';
 
+export interface PlantImage {
+  thumb: string;
+  medium: string;
+  original: string;
+}
+
 // Minimal plant info used on cards (browse, wishlist, cart)
 export interface PlantCardData {
   _id: string;
@@ -9,7 +15,7 @@ export interface PlantCardData {
   depositAmount: number;
   stock: number;
   careLevel: CareLevel;
-  images: string[];
+  images: PlantImage[];
   isAvailable: boolean;
 }
 
@@ -22,7 +28,7 @@ export interface Plant {
   depositAmount: number;
   stock: number;
   careLevel: CareLevel;
-  images: string[];
+  images: PlantImage[];
   isAvailable: boolean;
   isDeleted: boolean;
   createdAt: string;

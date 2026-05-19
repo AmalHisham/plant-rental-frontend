@@ -1,4 +1,5 @@
 import type { CareLevel } from '../plants/types';
+import type { PlantImage } from '../plants/types';
 
 // Full plant info returned by the wishlist API (backend populates this automatically)
 export interface WishlistPlant {
@@ -8,7 +9,7 @@ export interface WishlistPlant {
   pricePerDay: number;
   depositAmount: number;
   careLevel: CareLevel;
-  images: string[];
+  images: PlantImage[];
   isAvailable: boolean;
   stock: number;
 }
