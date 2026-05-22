@@ -76,6 +76,11 @@ interface GalleryProps {
   name: string;
 }
 
+const getMediumSrc = (image: PlantImage | string) =>
+  typeof image === 'string' ? image : image.medium;
+const getOriginalSrc = (image: PlantImage | string) =>
+  typeof image === 'string' ? image : image.original;
+
 function ImageGallery({ images, name }: GalleryProps) {
   const [active, setActive] = useState(0);
   // fading drives a CSS opacity transition: image fades to 0 → swap src → fade back to 1.
@@ -414,18 +419,6 @@ export default function PlantDetailsPage() {
     setActivePreset(match ? match.days : null);
     updateSearchParams('days', String(newDays));
   };
-
-  // Clamp quantity once plant data is available — in case the URL param
-  // references more units than are actually in stock.
-  useEffect(() => {
-    if (!data?.data) return;
-    if (quantity > data.data.stock) {
-      const clamped = Math.max(1, data.data.stock);
-      setQuantity(clamped);
-      updateSearchParams('quantity', String(clamped));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.data?.stock]);
 
   if (isLoading) return <PlantDetailSkeleton />;
 
@@ -820,7 +813,3 @@ export default function PlantDetailsPage() {
     </>
   );
 }
-  const getMediumSrc = (image: PlantImage | string) =>
-    typeof image === 'string' ? image : image.medium;
-  const getOriginalSrc = (image: PlantImage | string) =>
-    typeof image === 'string' ? image : image.original;

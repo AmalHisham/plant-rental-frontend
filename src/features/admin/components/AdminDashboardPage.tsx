@@ -273,13 +273,12 @@ function DashboardSkeleton() {
 
 export default function AdminDashboardPage() {
   const role = useAppSelector((s) => s.auth.user?.role);
+  const { data, isLoading, isError } = useAdminDashboard();
 
   // non-super_admin roles can't see the dashboard — redirect them to their section
   if (role && role !== 'super_admin') {
     return <Navigate to={getDefaultAdminRoute(role)} replace />;
   }
-
-  const { data, isLoading, isError } = useAdminDashboard();
 
   return (
     <AdminLayout>

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Plant } from '../../plants/types';
 import type { CreatePlantRequest } from '../types';
@@ -48,11 +48,6 @@ export default function PlantForm({ initialValues, onSubmit, onDeleteImage, isLo
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false); // turns true when user drags a file over the upload area
   const fileInputRef = useRef<HTMLInputElement>(null); // lets us open the file picker when user clicks the upload area
-
-  // Re-seed file state when switching between plants in edit mode
-  useEffect(() => {
-    setNewFiles([]);
-  }, [initialValues?._id]);
 
   const existingImages = initialValues?.images ?? []; // already uploaded images (empty in create mode)
   const totalCount = existingImages.length + newFiles.length;

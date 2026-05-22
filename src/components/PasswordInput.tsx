@@ -6,7 +6,7 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
 
 // Password field with show/hide toggle, forwardRef-compatible for react-hook-form registration.
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ hasError = false, className: _cls, ...props }, ref) => {
+  ({ hasError = false, ...props }, ref) => {
     const [show, setShow] = useState(false);
 
     return (

@@ -94,7 +94,16 @@ export default function AddressFormModal({ isOpen, onClose, initialData }: Addre
   const onSubmit = (data: FormValues) => {
     const payload = { ...data, phone: COUNTRY_CODE_IN + data.phone };
     if (isEditing) {
-      const { isDefault: _ignored, ...updatePayload } = payload;
+      const updatePayload = {
+        label: payload.label,
+        recipientName: payload.recipientName,
+        phone: payload.phone,
+        addressLine1: payload.addressLine1,
+        addressLine2: payload.addressLine2,
+        city: payload.city,
+        state: payload.state,
+        pincode: payload.pincode,
+      };
       updateMutation.mutate(
         { id: initialData!._id, data: updatePayload },
         {
