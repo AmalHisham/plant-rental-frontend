@@ -4,6 +4,7 @@ import { getWishlist, addToWishlist, removeFromWishlist } from '../utils/wishlis
 import type { WishlistPlant, WishlistResponse } from '../types';
 
 export const WISHLIST_QUERY_KEY = 'wishlist';
+const WISHLIST_ICON_LOOKUP_LIMIT = 50;
 
 // Don't fetch for guests - would trigger a 401 and an unnecessary token refresh
 export const useWishlist = (page = 1, limit = 9) => {
@@ -21,8 +22,9 @@ export const useWishlist = (page = 1, limit = 9) => {
 export const useWishlistIds = (): Set<string> => {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   const { data } = useQuery({
-    queryKey: [WISHLIST_QUERY_KEY, 1, 200],
-    queryFn: () => getWishlist(1, 200),
+    // Backend validation currently caps wishlist page size at 50.
+    queryKey: [WISHLIST_QUERY_KEY, 1, WISHLIST_ICON_LOOKUP_LIMIT],
+    queryFn: () => getWishlist(1, WISHLIST_ICON_LOOKUP_LIMIT),
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,
   });
@@ -38,9 +40,9 @@ export const useAddToWishlist = () => {
     // If the request fails, we roll back to the previous state.
     onMutate: async (plantId: string) => {
       await queryClient.cancelQueries({ queryKey: [WISHLIST_QUERY_KEY] });
-      const previous = queryClient.getQueryData<WishlistResponse>([WISHLIST_QUERY_KEY]);
-      queryClient.setQueryData<WishlistResponse>([WISHLIST_QUERY_KEY], (old) => {
-        if (!old) return old;
+      const previous = queryClient.getQueriesData<WishlistResponse>({ queryKey: [WISHLIST_QUERY_KEY] });
+      queryClient.setQueriesData<WishlistResponse>({ queryKey: [WISHLIST_QUERY_KEY] }, (old) => {
+        if (!old || old.data.wishlist.plants.some((item) => item.plantId._id === plantId)) return old;
         return {
           ...old,
           data: {
@@ -49,7 +51,7 @@ export const useAddToWishlist = () => {
               ...old.data.wishlist,
               plants: [
                 ...old.data.wishlist.plants,
-                // Only _id matters here - the full plant data arrives after the refetch
+                // Only _id matters here - the full plant data arrives after the refetch.
                 { plantId: { _id: plantId } as WishlistPlant },
               ],
             },
@@ -61,7 +63,9 @@ export const useAddToWishlist = () => {
     onError: (_err, _plantId, context) => {
       // Roll back to the saved state if the request failed
       if (context?.previous) {
-        queryClient.setQueryData([WISHLIST_QUERY_KEY], context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {
@@ -78,8 +82,8 @@ export const useRemoveFromWishlist = () => {
     // Same optimistic pattern as add - empty the heart immediately, roll back on error
     onMutate: async (plantId: string) => {
       await queryClient.cancelQueries({ queryKey: [WISHLIST_QUERY_KEY] });
-      const previous = queryClient.getQueryData<WishlistResponse>([WISHLIST_QUERY_KEY]);
-      queryClient.setQueryData<WishlistResponse>([WISHLIST_QUERY_KEY], (old) => {
+      const previous = queryClient.getQueriesData<WishlistResponse>({ queryKey: [WISHLIST_QUERY_KEY] });
+      queryClient.setQueriesData<WishlistResponse>({ queryKey: [WISHLIST_QUERY_KEY] }, (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -98,7 +102,9 @@ export const useRemoveFromWishlist = () => {
     },
     onError: (_err, _plantId, context) => {
       if (context?.previous) {
-        queryClient.setQueryData([WISHLIST_QUERY_KEY], context.previous);
+        context.previous.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {
