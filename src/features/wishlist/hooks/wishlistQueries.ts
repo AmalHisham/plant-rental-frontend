@@ -5,7 +5,7 @@ import type { WishlistPlant, WishlistResponse } from '../types';
 
 export const WISHLIST_QUERY_KEY = 'wishlist';
 
-// Don't fetch for guests — would trigger a 401 and an unnecessary token refresh
+// Don't fetch for guests - would trigger a 401 and an unnecessary token refresh
 export const useWishlist = (page = 1, limit = 9) => {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   return useQuery({
@@ -26,7 +26,7 @@ export const useWishlistIds = (): Set<string> => {
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,
   });
-  const plants = data?.data.plants ?? [];
+  const plants = data?.data.wishlist.plants ?? [];
   return new Set(plants.map((item) => item.plantId._id));
 };
 
@@ -45,11 +45,14 @@ export const useAddToWishlist = () => {
           ...old,
           data: {
             ...old.data,
-            plants: [
-              ...old.data.plants,
-              // Only _id matters here — the full plant data arrives after the refetch
-              { plantId: { _id: plantId } as WishlistPlant },
-            ],
+            wishlist: {
+              ...old.data.wishlist,
+              plants: [
+                ...old.data.wishlist.plants,
+                // Only _id matters here - the full plant data arrives after the refetch
+                { plantId: { _id: plantId } as WishlistPlant },
+              ],
+            },
           },
         };
       });
@@ -72,7 +75,7 @@ export const useRemoveFromWishlist = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeFromWishlist,
-    // Same optimistic pattern as add — empty the heart immediately, roll back on error
+    // Same optimistic pattern as add - empty the heart immediately, roll back on error
     onMutate: async (plantId: string) => {
       await queryClient.cancelQueries({ queryKey: [WISHLIST_QUERY_KEY] });
       const previous = queryClient.getQueryData<WishlistResponse>([WISHLIST_QUERY_KEY]);
@@ -82,9 +85,12 @@ export const useRemoveFromWishlist = () => {
           ...old,
           data: {
             ...old.data,
-            plants: old.data.plants.filter(
-              (item) => item.plantId._id !== plantId
-            ),
+            wishlist: {
+              ...old.data.wishlist,
+              plants: old.data.wishlist.plants.filter(
+                (item) => item.plantId._id !== plantId
+              ),
+            },
           },
         };
       });

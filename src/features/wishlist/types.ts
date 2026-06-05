@@ -32,6 +32,8 @@ export interface WishlistPagination {
 
 export interface WishlistResponse {
   success: true;
-  data: Wishlist;
+  data: {
+    wishlist: Wishlist;
+  };
   pagination: WishlistPagination;
 }

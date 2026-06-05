@@ -16,7 +16,7 @@ export default function WishlistPage() {
   };
   const { data, isLoading, isError } = useWishlist(page);
   // Default to empty array so the empty-state check works without extra null guards.
-  const items = data?.data.plants ?? [];
+  const items = data?.data.wishlist.plants ?? [];
   const pagination = data?.pagination;
 
   return (
