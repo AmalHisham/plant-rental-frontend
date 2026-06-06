@@ -6,6 +6,7 @@ import { setCredentials, setError } from '../authSlice';
 import { loginApi } from '../utils/authApi';
 import PasswordInput from '../../../components/PasswordInput';
 import BackButton from '../../../components/BackButton';
+import { getApiBaseUrl } from '../../../config/env';
 
 interface FormValues {
   email: string;
@@ -15,7 +16,7 @@ interface FormValues {
 // GOOGLE_AUTH_URL points to the backend's OAuth redirect entry point.
 // A full page navigation (href, not fetch) is required because Google OAuth
 // uses a browser redirect flow — it cannot be triggered by an XHR request.
-const GOOGLE_AUTH_URL = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000'}/api/auth/google`;
+const GOOGLE_AUTH_URL = `${getApiBaseUrl()}/api/auth/google`;
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();

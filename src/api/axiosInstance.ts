@@ -1,9 +1,12 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '../config/env';
+
+const apiBaseUrl = getApiBaseUrl();
 
 // One shared axios instance used by all API files.
 // withCredentials lets cookies be sent cross-origin (not used yet, but good to have).
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: apiBaseUrl,
   withCredentials: true,
 });
 
@@ -32,7 +35,7 @@ axiosInstance.interceptors.response.use(
 
         // Use plain axios (not axiosInstance) so this interceptor doesn't trigger again.
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/refresh-token`,
+          `${apiBaseUrl}/api/auth/refresh-token`,
           { refreshToken }
         );
 
